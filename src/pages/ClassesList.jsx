@@ -13,10 +13,14 @@ export default function ClassesList() {
   useEffect(() => {
     async function fetchSubjects() {
       try {
-        const res = await api.get("/courses/teacher/subjects/");
+        const res = await api.get(
+          "/courses/teacher/my-classes/"
+        );
+
         setSubjects(res.data);
       } catch (err) {
         console.error("Failed to load teacher subjects", err);
+        setSubjects([]);
       } finally {
         setLoading(false);
       }
@@ -29,7 +33,10 @@ export default function ClassesList() {
 
   return (
     <div className="cl-wrapper">
-      <button className="cl-back-btn" onClick={() => navigate("/teacher/dashboard")}>
+      <button
+        className="cl-back-btn"
+        onClick={() => navigate("/teacher/dashboard")}
+      >
         <IoChevronBack /> Back
       </button>
 
@@ -40,15 +47,28 @@ export default function ClassesList() {
         </div>
 
         <div className="cl-grid">
+          {subjects.length === 0 && (
+            <p style={{ opacity: 0.6 }}>No subjects assigned.</p>
+          )}
+
           {subjects.map((subject) => (
             <div
               className="cl-card"
-              key={subject.id}
-              onClick={() => navigate(`/teacher/classes/${subject.id}`)}
+              key={subject.subject_id}
+              onClick={() =>
+                navigate(
+                  `/teacher/classes/${subject.subject_id}`
+                )
+              }
             >
-              <p className="cl-card-name">{subject.display_name}</p>
+              <p className="cl-card-name">
+                {subject.subject_name}
+              </p>
+
               <div className="cl-card-right">
-                <span className="cl-card-label">Subject</span>
+                <span className="cl-card-label">
+                  {subject.course_title}
+                </span>
               </div>
             </div>
           ))}

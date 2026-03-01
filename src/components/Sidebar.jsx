@@ -56,14 +56,12 @@ export default function Sidebar() {
 
           {classes.map((cls) => (
             <p
-              key={cls.subject_id + cls.batch_code}
+              key={cls.subject_id}
               onClick={() =>
-                navigate(
-                  `/teacher/classes/${cls.subject_id}/${cls.batch_code}`
-                )
+                navigate(`/teacher/classes/${cls.subject_id}`)
               }
             >
-              {cls.subject_name} ({cls.course_title}) {cls.batch_code}
+              {cls.subject_name} ({cls.course_title})
             </p>
           ))}
         </div>

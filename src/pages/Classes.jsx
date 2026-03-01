@@ -6,32 +6,43 @@ import api from "../api/apiClient";
 import "../styles/classes.css";
 
 export default function Classes() {
-  const { batchId } = useParams(); // this is actually subjectId
+  const { subjectId } = useParams(); // ✅ correct param name
+
   const [hoveredTitle, setHoveredTitle] = useState("Assignments");
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!subjectId) return;
+
     async function fetchDashboard() {
       try {
+        setLoading(true);
+        setError(null);
+
         const res = await api.get(
-          `/courses/subjects/${batchId}/dashboard/`
+          `/courses/subjects/${subjectId}/dashboard/`
         );
+
         setDashboard(res.data);
       } catch (err) {
         console.error("Failed to load dashboard", err);
+        setError("Failed to load class data.");
+        setDashboard(null);
       } finally {
         setLoading(false);
       }
     }
 
-    if (batchId) fetchDashboard();
-  }, [batchId]);
+    fetchDashboard();
+  }, [subjectId]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>Loading class...</div>;
+  if (error) return <div>{error}</div>;
   if (!dashboard) return <div>No data found.</div>;
 
-  const base = `/teacher/classes/${batchId}`;
+  const base = `/teacher/classes/${subjectId}`;
 
   return (
     <div className="classes-wrapper">
@@ -45,20 +56,23 @@ export default function Classes() {
         </div>
 
         <div className="classes-grid">
+
           <SubjectCard
             title="Assignments"
-            count={dashboard.assignments.total}
+            count={dashboard.assignments?.total || 0}
             label="Tasks"
             path={`${base}/assignments`}
             onHover={() => setHoveredTitle("Assignments")}
           />
+
           <SubjectCard
             title="Quiz"
-            count={dashboard.quizzes.total}
+            count={dashboard.quizzes?.total || 0}
             label="Tests"
             path={`${base}/quizzes`}
             onHover={() => setHoveredTitle("Quiz")}
           />
+
           <SubjectCard
             title="Study Materials"
             count={dashboard.studyMaterialsCount || 0}
@@ -66,6 +80,7 @@ export default function Classes() {
             path={`${base}/study-materials`}
             onHover={() => setHoveredTitle("Study Materials")}
           />
+
           <SubjectCard
             title="Session Recordings"
             count={dashboard.recordingsCount || 0}
@@ -73,6 +88,7 @@ export default function Classes() {
             path={`${base}/session-recordings`}
             onHover={() => setHoveredTitle("Session Recordings")}
           />
+
           <SubjectCard
             title="Live Sessions"
             count={dashboard.upcomingSessions?.length || 0}
@@ -80,8 +96,8 @@ export default function Classes() {
             path={`${base}/live-sessions`}
             onHover={() => setHoveredTitle("Live Sessions")}
           />
-        </div>
 
+        </div>
       </div>
     </div>
   );
