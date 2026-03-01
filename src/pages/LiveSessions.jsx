@@ -1,10 +1,3 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { IoChevronBack } from "react-icons/io5";
-import { FiSearch } from "react-icons/fi";
-import { useEffect, useState } from "react";
-import api from "../api/apiClient";
-import "../styles/live-sessions.css";
-
 export default function LiveSessions() {
   const navigate = useNavigate();
   const { subjectId } = useParams();
@@ -15,24 +8,24 @@ export default function LiveSessions() {
   useEffect(() => {
     async function fetchSessions() {
       try {
+        setLoading(true);
+
         const res = await api.get(
-          "/livestream/teacher/sessions/"
+          `/livestream/teacher/sessions/?subject_id=${subjectId}`
         );
 
-        // Filter sessions for this subject only
-        const filtered = res.data.filter(
-          (s) => s.subject === subjectId
-        );
-
-        setSessions(filtered);
+        setSessions(res.data || []);
       } catch (err) {
         console.error("Failed to load sessions", err);
+        setSessions([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchSessions();
+    if (subjectId) {
+      fetchSessions();
+    }
   }, [subjectId]);
 
   return (
@@ -70,7 +63,6 @@ export default function LiveSessions() {
         </div>
 
         <div className="live-sessions-grid">
-
           {loading && <p>Loading sessions...</p>}
 
           {!loading && sessions.length === 0 && (
@@ -83,16 +75,13 @@ export default function LiveSessions() {
                 key={session.id}
                 className="session-card"
                 onClick={() =>
-                  navigate(`/live/${session.id}`)
+                  navigate(`/teacher/live/${session.id}`)
                 }
               >
                 <div className="session-card-top">
                   <h4 className="session-card-subject">
                     {session.title}
                   </h4>
-                  <p className="session-card-topic">
-                    {session.description}
-                  </p>
                 </div>
 
                 <p className="session-card-teacher">
@@ -101,20 +90,15 @@ export default function LiveSessions() {
 
                 <div className="session-card-bottom">
                   <span className="session-card-date">
-                    {new Date(
-                      session.start_time
-                    ).toLocaleDateString()}
+                    {new Date(session.start_time).toLocaleDateString()}
                   </span>
 
                   <span className="session-card-timing">
-                    {new Date(
-                      session.start_time
-                    ).toLocaleTimeString()}
+                    {new Date(session.start_time).toLocaleTimeString()}
                   </span>
                 </div>
               </div>
             ))}
-
         </div>
       </div>
     </div>
