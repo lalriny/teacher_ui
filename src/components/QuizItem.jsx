@@ -30,18 +30,9 @@ export default function QuizItem({
       {expanded && (
         <div className="acc-body">
 
-          <p className="acc-line">
-            <strong>Subject:</strong> {subject}
-          </p>
-
-          <p className="acc-line">
-            <strong>Due Date:</strong>{" "}
-            {new Date(dueDate).toLocaleString()}
-          </p>
-
-          <p className="acc-line">
-            <strong>Submission Rate:</strong> {submissionRate}%
-          </p>
+          {subject && <p className="acc-line"><strong>Subject Name:</strong> {subject}</p>}
+          {dueDate && <p className="acc-line"><strong>Due Date:</strong> {dueDate}</p>}
+          {submissionRate && <p className="acc-line"><strong>Submission Rate:</strong> {submissionRate}</p>}
 
           <p className="acc-line">
             <strong>Average Score:</strong>{" "}

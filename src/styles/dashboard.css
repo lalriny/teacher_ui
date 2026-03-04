@@ -12,9 +12,9 @@
 
 .dash-top {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 230px;
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* Live Sessions section */
@@ -97,7 +97,6 @@
   background: white;
   border-radius: 14px;
   padding: 14px;
-  width: 240px;
 }
 
 .calendar-header {
@@ -188,7 +187,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
   flex: 1;
   min-height: 0;
 }
@@ -199,6 +198,8 @@
   background: #eaf4f4;
   border-radius: 14px;
   padding: 14px;
+  display: flex;
+  flex-direction: column;
 }
 
 .dash-card-header {
@@ -267,8 +268,9 @@
 }
 
 .dash-card-body {
-  max-height: 350px;
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 /* --- ACCORDION ITEMS (Assignment / Quiz) --- */
