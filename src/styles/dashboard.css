@@ -12,9 +12,9 @@
 
 .dash-top {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 230px;
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* Live Sessions section */
@@ -97,7 +97,6 @@
   background: white;
   border-radius: 14px;
   padding: 14px;
-  width: 240px;
 }
 
 .calendar-header {
@@ -154,8 +153,33 @@
 .cal-date:hover { background: #eef6f7; }
 .cal-today { background: #e85d5d; color: white; }
 .cal-today:hover { background: #d04e4e; }
-.cal-red { background: #e85d5d; color: white; }
+.cal-red  { background: #e85d5d; color: white; }
 .cal-teal { background: #4fc3c7; color: white; }
+
+/* Calendar Legend */
+.cal-legend {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #5a6a72;
+}
+
+.cal-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
 
 /* --- BOTTOM ROW: 3 equal columns --- */
 
@@ -163,7 +187,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
   flex: 1;
   min-height: 0;
 }
@@ -174,6 +198,8 @@
   background: #eaf4f4;
   border-radius: 14px;
   padding: 14px;
+  display: flex;
+  flex-direction: column;
 }
 
 .dash-card-header {
@@ -242,8 +268,9 @@
 }
 
 .dash-card-body {
-  max-height: 350px;
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 /* --- ACCORDION ITEMS (Assignment / Quiz) --- */
@@ -331,10 +358,10 @@
   align-self: stretch;
 }
 
-.act-bar.teal { background: #4fc3c7; }
-.act-bar.yellow { background: #f0c930; }
-.act-bar.purple { background: #a066d3; }
-.act-bar.red { background: #e85d5d; }
+.act-bar.green  { background: #57D982; }
+.act-bar.yellow { background: #FAFA70; }
+.act-bar.purple { background: #93A1E5; }
+.act-bar.red    { background: #e85d5d; }
 
 .act-content {
   flex: 1;
@@ -354,10 +381,10 @@
   margin: 0 0 3px;
 }
 
-.act-label.teal { color: #00979e; }
-.act-label.yellow { color: #c5a000; }
-.act-label.purple { color: #8040b0; }
-.act-label.red { color: #d04040; }
+.act-label.green  { color: #1a8c47; }
+.act-label.yellow { color: #b8a000; }
+.act-label.purple { color: #5060c0; }
+.act-label.red    { color: #d04040; }
 
 .act-line {
   font-size: 10px;
