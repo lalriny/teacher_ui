@@ -3,21 +3,41 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const highlightedDates = {
-  8: "red",
-  21: "teal",
-  23: "red",
-  29: "teal",
-  31: "red",
+const EVENT_COLORS = {
+  "assignment":   "#57D982",
+  "live-session": "#FAFA70",
+  "quiz":         "#93A1E5",
 };
 
+// Mar 2026 event data: day → array of event types
+const calendarEvents = {
+  4:  ["live-session", "assignment"],
+  6:  ["assignment", "quiz"],
+  13: ["assignment"],
+  20: ["assignment"],
+  21: ["live-session", "assignment", "quiz"],
+};
+
+function getDateStyle(types) {
+  if (!types || types.length === 0) return {};
+  const colors = types.map(t => EVENT_COLORS[t]);
+  if (colors.length === 1) {
+    return { background: colors[0], color: "#1f2d3d" };
+  }
+  return {
+    background: `linear-gradient(135deg, ${colors.join(", ")})`,
+    color: "#1f2d3d",
+  };
+}
+
+const now = new Date();
+
 export default function CalendarWidget() {
-  const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth());
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
   const today = new Date();
 
   const changeMonth = (dir) => {
@@ -28,6 +48,8 @@ export default function CalendarWidget() {
     setMonth(m);
     setYear(y);
   };
+
+  const isEventMonth = year === now.getFullYear() && month === now.getMonth();
 
   return (
     <div className="calendar">
@@ -57,19 +79,35 @@ export default function CalendarWidget() {
             day === today.getDate() &&
             month === today.getMonth() &&
             year === today.getFullYear();
-          const highlight = highlightedDates[day];
-
-          let cls = "cal-date";
-          if (isToday) cls += " cal-today";
-          else if (highlight === "red") cls += " cal-red";
-          else if (highlight === "teal") cls += " cal-teal";
+          const eventTypes = isEventMonth ? calendarEvents[day] : null;
+          const eventStyle = (!isToday && eventTypes) ? getDateStyle(eventTypes) : {};
 
           return (
-            <span key={day} className={cls}>
+            <span
+              key={day}
+              className={`cal-date${isToday ? " cal-today" : ""}`}
+              style={eventStyle}
+            >
               {day}
             </span>
           );
         })}
+      </div>
+
+      {/* Legend */}
+      <div className="cal-legend">
+        <span className="cal-legend-item">
+          <span className="cal-legend-dot" style={{ background: "#57D982" }} />
+          Assignment
+        </span>
+        <span className="cal-legend-item">
+          <span className="cal-legend-dot" style={{ background: "#FAFA70", border: "1px solid #ccc" }} />
+          Live Session
+        </span>
+        <span className="cal-legend-item">
+          <span className="cal-legend-dot" style={{ background: "#93A1E5" }} />
+          Quiz
+        </span>
       </div>
     </div>
   );

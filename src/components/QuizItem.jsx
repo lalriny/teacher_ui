@@ -4,7 +4,6 @@ import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 export default function QuizItem({
   id,
-  title,
   subject,
   dueDate,
   submissionRate,
@@ -20,7 +19,7 @@ export default function QuizItem({
   return (
     <div className="acc-item">
       <div className="acc-header" onClick={() => setExpanded(!expanded)}>
-        <span className="acc-id">{title}</span>
+        <span className="acc-id">{id}</span>
         {expanded ? (
           <MdExpandLess className="acc-arrow" />
         ) : (
@@ -31,18 +30,9 @@ export default function QuizItem({
       {expanded && (
         <div className="acc-body">
 
-          <p className="acc-line">
-            <strong>Subject:</strong> {subject}
-          </p>
-
-          <p className="acc-line">
-            <strong>Due Date:</strong>{" "}
-            {new Date(dueDate).toLocaleString()}
-          </p>
-
-          <p className="acc-line">
-            <strong>Submission Rate:</strong> {submissionRate}%
-          </p>
+          {subject && <p className="acc-line"><strong>Subject Name:</strong> {subject}</p>}
+          {dueDate && <p className="acc-line"><strong>Due Date:</strong> {dueDate}</p>}
+          {submissionRate && <p className="acc-line"><strong>Submission Rate:</strong> {submissionRate}</p>}
 
           <p className="acc-line">
             <strong>Average Score:</strong>{" "}

@@ -21,9 +21,19 @@ const quizzes = [
   { id: "Quiz: 3", status: "overdue" },
 ];
 
+const activityItems = [
+  { date: "04/03/2026 (Wed)", label: "Live Session",    type: "live-session", labelColor: "yellow", lines: ["Mathematics chapter 1: algebra", "Teacher: Sir Zothana", "Time: 1:00pm to 2:00pm"] },
+  { date: "04/03/2026 (Wed)", label: "Due Assignment",  type: "assignment",   labelColor: "green",  lines: ["Mathematics chapter 1: algebra", "Teacher: Sir Zothana"] },
+  { date: "04/03/2026 (Wed)", label: "Live Session",    type: "live-session", labelColor: "yellow", lines: ["English chapter 1: Poem", "Teacher: Miss Ruatfeli", "Time: 10:00am to 12:00pm"] },
+  { date: "06/03/2026 (Fri)", label: "Quiz",            type: "quiz",         labelColor: "purple", lines: ["Science: chapter 1: Chemistry", "Teacher: Sir Rasta", "Due Date: 06/03/26 (Friday)"] },
+  { date: "13/03/2026 (Fri)", label: "Due Assignment",  type: "assignment",   labelColor: "green",  lines: ["Mathematics chapter 1: algebra", "Teacher: Sir Zothana"] },
+  { date: "20/03/2026 (Fri)", label: "Due Assignment",  type: "assignment",   labelColor: "green",  lines: ["Mathematics chapter 1: algebra", "Teacher: Sir Zothana"] },
+];
+
 export default function TeacherDashboard() {
   const [assignFilter, setAssignFilter] = useState(null); // null | "due" | "overdue"
   const [quizFilter, setQuizFilter] = useState(null);
+  const [activityFilter, setActivityFilter] = useState("all");
 
   const toggleFilter = (current, value, setter) => {
     setter(current === value ? null : value);
@@ -112,16 +122,25 @@ export default function TeacherDashboard() {
         {/* Column 3 — Activity Timeline */}
         <div className="dash-card">
           <div className="dash-card-header">
-            <h4>8 Jan 2026</h4>
-            <select className="dash-filter"><option>All</option></select>
+            <h4>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</h4>
+            <select
+              className="dash-filter"
+              value={activityFilter}
+              onChange={e => setActivityFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="assignment">Assignments</option>
+              <option value="live-session">Live Sessions</option>
+              <option value="quiz">Quiz</option>
+            </select>
           </div>
           <div className="dash-card-body">
-            <ActivityItem date="21/01/2026 (Wed)" label="Live Session" labelColor="teal" lines={["Mathematics chapter 1: algebra", "Teacher: Sir Zothana", "Time: 1:00pm to 2:00pm"]} />
-            <ActivityItem date="21/01/2026 (Wed)" label="Due Assignment" labelColor="yellow" lines={["Mathematics chapter 1: algebra", "Teacher: Sir Zothana"]} />
-            <ActivityItem date="21/01/2026 (Wed)" label="Live Session" labelColor="teal" lines={["English chapter 1: Poem", "Teacher: Miss Ruatfeli", "Time: 10:00am to 12:00pm"]} />
-            <ActivityItem date="21/01/2026 (Wed)" label="Quiz" labelColor="purple" lines={["Science: chapter 1: Chemistry", "Teacher: Sir Rasta", "Due Date: 23/01/26 (Friday)"]} />
-            <ActivityItem date="23/01/2026 (Fri)" label="Due Assignment" labelColor="yellow" lines={["Mathematics chapter 1: algebra", "Teacher: Sir Zothana"]} />
-            <ActivityItem date="29/01/2026 (Thu)" label="Due Assignment" labelColor="yellow" lines={["Mathematics chapter 1: algebra", "Teacher: Sir Zothana"]} />
+            {activityItems
+              .filter(item => activityFilter === "all" || item.type === activityFilter)
+              .map((item, i) => (
+                <ActivityItem key={i} date={item.date} label={item.label} labelColor={item.labelColor} lines={item.lines} />
+              ))
+            }
           </div>
         </div>
 

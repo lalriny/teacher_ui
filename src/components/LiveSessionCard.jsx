@@ -1,4 +1,4 @@
-export default function LiveSessionCard({ subject, topic, batch, startsIn, timing }) {
+export default function LiveSessionCard({ subject, topic, startsIn, timing }) {
   return (
     <div className="live-card">
       <div className="live-card-body">
@@ -6,7 +6,7 @@ export default function LiveSessionCard({ subject, topic, batch, startsIn, timin
         <p>{topic}</p>
         <p>Batch/Class ID</p>
         <p className="live-card-spacer"></p>
-        <p className="starts-in">Starts in {startsIn}</p>
+        <p className="starts-in">{startsIn}</p>
         <p className="time">{timing}</p>
       </div>
     </div>
