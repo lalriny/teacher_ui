@@ -1,0 +1,60 @@
+.teacherTopSlider {
+  height: 52px;
+  background: #075c67;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.teacherTopSlider__arrow {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.teacherTopSlider__arrow svg {
+  font-size: 28px;
+}
+
+.teacherTopSlider__title {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
+}
+
+@media (max-width: 768px) {
+  .teacherTopSlider {
+    height: 40px;
+    padding: 0 8px;
+  }
+
+  .teacherTopSlider__arrow {
+    width: 32px;
+    height: 32px;
+  }
+
+  .teacherTopSlider__arrow svg {
+    font-size: 26px;
+  }
+
+  .teacherTopSlider__title {
+    font-size: 15px;
+  }
+}

@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { HiOutlineMenuAlt3 } from "react-icons/hi";
 import api from "../api/apiClient";
 import "../styles/header.css";
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -36,6 +37,15 @@ export default function Header() {
 
   return (
     <header className="header">
+      <button
+        className="hamburgerBtn"
+        onClick={onMenuClick}
+        type="button"
+        aria-label="Open sidebar"
+      >
+        <HiOutlineMenuAlt3 />
+      </button>
+
       <div className="profile-menu" ref={menuRef}>
         <img
           src={avatar || "https://i.pravatar.cc/40?img=3"}

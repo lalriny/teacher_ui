@@ -1,9 +1,12 @@
 .sidebar {
-  width: 240px; /* FIXED */
-  background: #425f7f; /* FIXED color */
+  width: 240px;
+  background: #425f7f;
   color: white;
   padding: 20px 16px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 110;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-logo {
@@ -16,6 +19,7 @@
 .sidebar-logo img {
   width: 42px;
   height: 42px;
+  flex-shrink: 0;
 }
 
 .sidebar-logo h3 {
@@ -28,6 +32,7 @@
   font-size: 10px;
   opacity: 0.75;
   margin: 0;
+  line-height: 1.3;
 }
 
 .menu-item {
@@ -61,8 +66,102 @@
   margin-top: 6px;
   opacity: 0.85;
   cursor: pointer;
+  line-height: 1.4;
 }
 
 .submenu p:hover {
   opacity: 1;
+}
+
+.sidebar-close-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background: #425f7f;
+    transform: translateX(-100%);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+    overflow-y: auto;
+    padding: 24px 20px 28px;
+    border-radius: 0;
+    z-index: 110;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-logo {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 34px;
+    padding-right: 42px;
+  }
+
+  .sidebar-logo img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sidebar-logo h3 {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .sidebar-logo p {
+    font-size: 11px;
+    opacity: 0.9;
+  }
+
+  .menu-item {
+    gap: 14px;
+    padding: 14px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+
+  .menu-item.active {
+    background: rgba(255, 255, 255, 0.16);
+    padding-left: 12px;
+    border-radius: 14px;
+  }
+
+  .submenu {
+    margin-top: 4px;
+  }
+
+  .submenu p {
+    margin-left: 40px;
+    margin-top: 8px;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+
+  .sidebar-close-btn {
+    display: block;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    z-index: 111;
+  }
+
+  .sidebar-close-btn svg {
+    font-size: 30px;
+  }
 }
