@@ -391,3 +391,13 @@
   color: #555;
   margin: 1px 0;
 }
+@media (max-width: 768px) {
+  .dash-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: unset;
+    overflow: visible;
+    min-height: auto;
+  }
+}

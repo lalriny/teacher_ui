@@ -308,3 +308,35 @@
     width: 100%;
   }
 }
+@media (max-width: 768px) {
+  .dashboard {
+    gap: 12px;
+  }
+
+  .dash-top,
+  .dash-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dash-live-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dash-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dash-card-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dash-pills {
+    flex-wrap: wrap;
+  }
+}

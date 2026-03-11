@@ -1,6 +1,8 @@
 .teacher-layout {
   display: flex;
   height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .teacher-main {
@@ -17,4 +19,22 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 109;
+}
+
+@media (max-width: 768px) {
+  .teacher-layout {
+    height: 100dvh;
+  }
+
+  .teacher-content {
+    padding: 12px;
+    overflow-x: hidden;
+  }
 }

@@ -5,6 +5,23 @@
   align-items: center;
   padding: 0 24px;
   background: #b7d3d6;
+  position: relative;
+  z-index: 100;
+}
+
+.hamburgerBtn {
+  display: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-right: auto;
+  cursor: pointer;
+  color: #1f2d3d;
+  line-height: 1;
+}
+
+.hamburgerBtn svg {
+  font-size: 30px;
 }
 
 .profile-menu {
@@ -12,6 +29,10 @@
 }
 
 .profile-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
   cursor: pointer;
 }
 
@@ -23,7 +44,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   min-width: 220px;
-  z-index: 100;
+  z-index: 120;
   overflow: hidden;
   padding: 8px 0;
 }
@@ -75,4 +96,28 @@
 .arrow {
   color: #999;
   font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+
+  .hamburgerBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dropdown {
+    top: 52px;
+    right: 0;
+    min-width: 210px;
+  }
 }
