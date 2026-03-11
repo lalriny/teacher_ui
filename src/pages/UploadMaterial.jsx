@@ -8,7 +8,9 @@ import "../styles/upload-material.css";
 export default function UploadMaterial() {
 
   const navigate = useNavigate();
-  const { subjectId } = useParams();
+
+  // Correct param name
+  const { chapterId } = useParams();
 
   const [title, setTitle] = useState("");
   const [files, setFiles] = useState([]);
@@ -56,19 +58,14 @@ export default function UploadMaterial() {
       });
 
       await api.post(
-        `/materials/materials/upload/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        }
+        `/materials/chapters/${chapterId}/materials/upload/`,
+        formData
       );
 
       alert("Upload successful");
 
       navigate(
-        `/teacher/classes/${subjectId}/study-materials`
+        `/teacher/chapters/${chapterId}/study-materials`
       );
 
     } catch (err) {

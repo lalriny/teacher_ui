@@ -9,21 +9,21 @@ import "../styles/study-materials.css";
 export default function StudyMaterials() {
 
   const navigate = useNavigate();
-  const { subjectId } = useParams();
+  const { chapterId } = useParams();
 
   const [materials, setMaterials] = useState([]);
 
   useEffect(() => {
-    if (!subjectId) return;
+    if (!chapterId) return;
     loadMaterials();
-  }, [subjectId]);
+  }, [chapterId]);
 
   const loadMaterials = async () => {
 
     try {
 
       const res = await api.get(
-        `/materials/classes/${subjectId}/materials/`
+        `/materials/chapters/${chapterId}/materials/`
       );
 
       setMaterials(res.data);
@@ -43,7 +43,7 @@ export default function StudyMaterials() {
     try {
 
       await api.delete(
-        `/materials/classes/${subjectId}/materials/${id}/`
+        `/materials/materials/${id}/`
       );
 
       setMaterials((prev) =>
@@ -61,7 +61,7 @@ export default function StudyMaterials() {
   const handleAddMaterial = () => {
 
     navigate(
-      `/teacher/classes/${subjectId}/study-materials/upload`
+      `/teacher/chapters/${chapterId}/study-materials/upload`
     );
 
   };
@@ -144,7 +144,7 @@ export default function StudyMaterials() {
                     className="sm-view-btn"
                     onClick={() =>
                       navigate(
-                        `/teacher/classes/${subjectId}/study-materials/${material.id}`,
+                        `/teacher/chapters/${chapterId}/study-materials/${material.id}`,
                         { state: material }
                       )
                     }
