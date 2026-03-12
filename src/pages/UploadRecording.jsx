@@ -51,7 +51,7 @@ export default function UploadRecording() {
       setUploading(true);
 
       console.log("Creating Bunny video slot...");
-
+      console.log("UPLOAD KEY:", import.meta.env.VITE_BUNNY_UPLOAD_KEY);
       // 1️⃣ Ask Django to create Bunny video slot
       const res = await api.post(
         "/courses/recordings/create-video/",
