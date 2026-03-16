@@ -9,7 +9,7 @@ const optionLabels = ["a", "b", "c", "d"];
 
 export default function QuizView() {
   const navigate = useNavigate();
-  const { quizId } = useParams();
+  const { quizId, subjectId } = useParams();
 
   const [quiz, setQuiz] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -125,7 +125,7 @@ export default function QuizView() {
             <button
               className="qv-view-submission-btn"
               onClick={() => {
-                navigate(`/teacher/classes/quizzes/${quizId}/submissions`);
+                navigate(`/teacher/classes/${subjectId}/quizzes/${quizId}/submissions`);
               }}
             >
               View Submission

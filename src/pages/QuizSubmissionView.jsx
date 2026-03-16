@@ -1,28 +1,37 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { IoChevronBack } from "react-icons/io5";
 import { FiSearch } from "react-icons/fi";
+import api from "../api/apiClient";
 import "../styles/quiz-submission-view.css";
 
-const dummyStudents = [
-  { name: "Lalthanfelaloa", submittedOn: "2026-01-28", status: "Submitted", score: "8/12" },
-  { name: "Lalhruaitluanga chakma", submittedOn: "2026-01-28", status: "Submitted", score: "8/12" },
-  { name: "Baraba Lalhruiazela", submittedOn: "2026-01-28", status: "Submitted", score: "2/12" },
-  { name: "John Lalruavaklopuia", submittedOn: "2026-01-29", status: "Submitted", score: "8/12" },
-  { name: "Simon kovel", submittedOn: "2026-01-30", status: "Submitted", score: "1/12" },
-  
-  { name: "John Lilpuia", submittedOn: null, status: "Pending", score: null },
-  { name: "John Puia", submittedOn: null, status: "Pending", score: null },
-];
+
 
 export default function QuizSubmissionView() {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const [activeTab, setActiveTab] = useState("Submitted");
+  const { quizId, subjectId } = useParams();
+
+  const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
 
-  const title = state?.title || "Mathematics Assignment - ID";
-  const students = state?.students || dummyStudents;
+  useEffect(() => {
+    async function fetchSubmissions() {
+      try {
+        const res = await api.get(`/quizzes/${quizId}/attempts/`);
+        setStudents(res.data);
+      } catch (err) {
+        console.error("Failed to load submissions", err);
+      }
+    }
+
+    fetchSubmissions();
+  }, [quizId]);
+
+  const filteredStudents = students.filter((s) =>
+    (s.student_name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
@@ -34,64 +43,37 @@ export default function QuizSubmissionView() {
     });
   };
 
-  const total = students.length;
-  const submittedStudents = students.filter((s) => s.status === "Submitted");
-  const pendingStudents = students.filter((s) => s.status === "Pending");
 
-  const filtered = activeTab === "Submitted" ? submittedStudents : pendingStudents;
-  const displayStudents = filtered.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const countDisplay =
-    activeTab === "Submitted"
-      ? `${submittedStudents.length}/${total}`
-      : `${pendingStudents.length}/${total}`;
-
+  
   return (
     <div className="qsv-page">
-      <button className="qsv-back-btn" onClick={() => navigate("/teacher/classes/quizzes")}>
+
+      <button
+        className="qsv-back-btn"
+        onClick={() =>
+          navigate(`/teacher/classes/${subjectId}/quizzes/${quizId}`)
+        }
+      >
         <IoChevronBack /> Back
       </button>
 
-      <div className="qsv-content-card">                             
-        <div className="qsv-title-row">                              
-          <h2 className="qsv-title">{title}</h2>
-          <span
-            className={
-              activeTab === "Submitted"
-                ? "qsv-count qsv-count-green"
-                : "qsv-count qsv-count-red"
-            }
-          >
-            {countDisplay}
+      <div className="qsv-content-card">
+
+        <div className="qsv-title-row">
+          <h2 className="qsv-title">Quiz Submissions</h2>
+          <span className="qsv-count qsv-count-green">
+            {students.length}
           </span>
         </div>
 
-        <div className="qsv-tabs-search-row">
-          <div className="qsv-tabs">
-            <button
-              className={`qsv-tab ${activeTab === "Pending" ? "qsv-tab-active-pending" : ""}`}
-              onClick={() => setActiveTab("Pending")}
-            >
-              Pending
-            </button>
-            <button
-              className={`qsv-tab ${activeTab === "Submitted" ? "qsv-tab-active-submitted" : ""}`}
-              onClick={() => setActiveTab("Submitted")}
-            >
-              Submitted
-            </button>
-          </div>
-          <div className="qsv-search">
-            <input
-              type="text"
-              placeholder="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <FiSearch className="qsv-search-icon" />
-          </div>
+        <div className="qsv-search">
+          <input
+            type="text"
+            placeholder="Search student"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <FiSearch className="qsv-search-icon" />
         </div>
 
         <table className="qsv-table">
@@ -99,41 +81,35 @@ export default function QuizSubmissionView() {
             <tr>
               <th>Sl No.</th>
               <th>Name</th>
-              <th>Submitted On:</th>
-              <th>Status</th>
+              <th>Submitted On</th>
               <th>Score</th>
               <th></th>
             </tr>
           </thead>
+
           <tbody>
-            {displayStudents.map((student, index) => (
-              <tr key={index}>
+            {filteredStudents.map((student, index) => (
+              <tr key={student.id || index}>
                 <td>{index + 1}</td>
-                <td>{student.name}</td>
-                <td>{formatDate(student.submittedOn)}</td>
+
+                <td>{student.student_name}</td>
+
+                <td>{formatDate(student.submitted_at)}</td>
+
                 <td>
-                  <span
-                    className={
-                      student.status === "Submitted"
-                        ? "qsv-status-submitted"
-                        : "qsv-status-pending"
-                    }
-                  >
-                    {student.status}
-                  </span>
+                  {student.score} / {student.total_marks}
                 </td>
-                <td>{student.score || "-"}</td>
+
                 <td>
                   <button
                     className="qsv-review-btn"
                     onClick={() =>
-                      navigate("/teacher/classes/quizzes/view/submissions/review", {
-                        state: {
-                          studentName: student.name,
-                          submittedDate: formatDate(student.submittedOn),
-                          score: student.score,
-                        },
-                      })
+                      navigate(
+                        `/teacher/classes/${subjectId}/quizzes/${quizId}/review`,
+                        {
+                          state: student,
+                        }
+                      )
                     }
                   >
                     Review
@@ -143,6 +119,13 @@ export default function QuizSubmissionView() {
             ))}
           </tbody>
         </table>
+
+        {students.length === 0 && (
+          <p style={{ padding: "30px" }}>
+            No submissions yet.
+          </p>
+        )}
+
       </div>
     </div>
   );
