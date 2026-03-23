@@ -62,7 +62,7 @@ export default function Header({ onMenuClick }) {
         {open && (
           <div className="dropdown">
             <div className="dropdown-header">
-              <span className="dropdown-username">james</span>
+              <span className="dropdown-username">teacher-test</span>
 
               <img
                 src={avatar || "https://i.pravatar.cc/40?img=3"}
@@ -92,7 +92,7 @@ export default function Header({ onMenuClick }) {
             </button>
 
             <button onClick={handleReturnToHomepage}>
-              Return to Homepages <span className="arrow">›</span>
+              Return to Homepage <span className="arrow">›</span>
             </button>
 
             <button onClick={handleLogout}>
