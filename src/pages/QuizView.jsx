@@ -77,11 +77,12 @@ export default function QuizView() {
           </h3>
 
           <p className="qv-teacher-info">
-            {quiz.teacher_name || quiz.created_by_email} -{" "}
-            {quiz.created_at
-             ? new Date(quiz.created_at).toLocaleDateString()
-             : "-"}
-          </p>
+  👤 {quiz.created_by?.name || "Unknown"}
+  <br />
+  📅 {quiz.created_at
+    ? new Date(quiz.created_at).toLocaleDateString()
+    : "-"}
+</p>
 
           <div className="qv-dates-row">
             <span className="qv-date-text">
