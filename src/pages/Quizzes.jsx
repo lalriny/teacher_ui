@@ -91,8 +91,7 @@ export default function Quizzes() {
 
                 {/* Optional: show short ID */}
                 <span className="quiz-name">ID: {quiz.id.slice(0,8)}</span>
-<span className="quiz-creator">
-    By: {quiz.teacher_name || "Unknown"}
+
               </div>
 
               <div className="quiz-detail">
