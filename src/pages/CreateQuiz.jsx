@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/apiClient";
+import { useAuth } from "../contexts/AuthContext";
 import "../styles/create-quiz.css";
 
 const createEmptyQuestion = () => ({
   question: "",
+
   options: ["", "", "", ""],
   answerIndex: null,
   explanation: "",
@@ -12,11 +14,12 @@ const createEmptyQuestion = () => ({
 
 export default function CreateQuiz() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { subjectId } = useParams();
-
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState([createEmptyQuestion()]);
   const [loading, setLoading] = useState(false);
+
 
   const updateQuestion = (index, value) => {
     const copy = [...questions];
@@ -111,6 +114,10 @@ export default function CreateQuiz() {
     value={title}
     onChange={(e) => setTitle(e.target.value)}
   />
+ {/* ✅ Created by */}
+  <p className="cq-created-by">
+    Created by: {user?.name || user?.username || "You"}
+  </p>
 
 </div>
 
