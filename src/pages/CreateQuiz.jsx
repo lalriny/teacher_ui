@@ -10,6 +10,8 @@ const createEmptyQuestion = () => ({
   explanation: "",
 });
 
+const TIME_PRESETS = [5, 10, 15, 30];
+
 export default function CreateQuiz() {
   const navigate = useNavigate();
   const { subjectId } = useParams();
@@ -17,7 +19,9 @@ export default function CreateQuiz() {
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState([createEmptyQuestion()]);
   const [loading, setLoading] = useState(false);
-  const [timeLimit, setTimeLimit] = useState("");
+  const [timeLimit, setTimeLimit] = useState(10);
+  const [customTime, setCustomTime] = useState("");
+  const [useCustom, setUseCustom] = useState(false);
 
   const updateQuestion = (index, value) => {
     const copy = [...questions];
@@ -35,7 +39,7 @@ export default function CreateQuiz() {
     const copy = [...questions];
     copy[index].explanation = value;
     setQuestions(copy);
-   };
+  };
 
   const setCorrectAnswer = (qIndex, optIndex) => {
     const copy = [...questions];
@@ -47,13 +51,16 @@ export default function CreateQuiz() {
     setQuestions([...questions, createEmptyQuestion()]);
   };
 
+  const effectiveTimeLimit = useCustom
+    ? parseInt(customTime) || 5
+    : timeLimit;
+
   const handleCreate = async () => {
     try {
-
       for (let q of questions) {
         if (!q.explanation.trim()) {
-         alert("Explanation is required for all questions");
-         return;
+          alert("Explanation is required for all questions");
+          return;
         }
       }
       setLoading(true);
@@ -63,14 +70,13 @@ export default function CreateQuiz() {
         title,
         description: "",
         due_date: new Date(Date.now() + 86400000).toISOString(),
-        time_limit_minutes: timeLimit || 5,
+        time_limit_minutes: effectiveTimeLimit,
       });
 
       const quizId = quizRes.data.id;
 
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-
         await api.post(`/teacher/quizzes/${quizId}/questions/`, {
           text: q.question,
           order: i + 1,
@@ -104,23 +110,59 @@ export default function CreateQuiz() {
 
       <div className="cq-shell">
         <div className="cq-title-container">
+          <input
+            className="cq-title-input"
+            type="text"
+            placeholder="Quiz Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
 
-  <input
-    className="cq-title-input"
-    type="text"
-    placeholder="Quiz Title"
-    value={title}
-    onChange={(e) => setTitle(e.target.value)}
-  />
-   <input
-    type="number"
-    placeholder="Time limit (minutes)"
-    value={timeLimit}
-    onChange={(e) => setTimeLimit(e.target.value)}
-    style={{ marginTop: "10px" }}
-  />
+          {/* ── Timer picker ── */}
+          <div className="cq-timer-picker">
+            <span className="cq-timer-label">⏱ Time limit</span>
+            <div className="cq-timer-presets">
+              {TIME_PRESETS.map((min) => (
+                <button
+                  key={min}
+                  type="button"
+                  className={`cq-timer-btn ${
+                    !useCustom && timeLimit === min ? "active" : ""
+                  }`}
+                  onClick={() => {
+                    setTimeLimit(min);
+                    setUseCustom(false);
+                  }}
+                >
+                  {min} min
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`cq-timer-btn ${useCustom ? "active" : ""}`}
+                onClick={() => setUseCustom(true)}
+              >
+                Custom
+              </button>
+            </div>
 
-</div>
+            {useCustom && (
+              <input
+                className="cq-timer-custom-input"
+                type="number"
+                min="1"
+                placeholder="Enter minutes"
+                value={customTime}
+                onChange={(e) => setCustomTime(e.target.value)}
+                autoFocus
+              />
+            )}
+
+            <span className="cq-timer-display">
+              {effectiveTimeLimit} min selected
+            </span>
+          </div>
+        </div>
 
         <div className="cq-form-container">
           <div className="cq-questions-list">
@@ -142,7 +184,6 @@ export default function CreateQuiz() {
                       <span className="cq-option-letter">
                         {String.fromCharCode(97 + optIndex)})
                       </span>
-
                       <input
                         className="cq-option-input"
                         placeholder={`Option ${optIndex + 1}`}
@@ -157,7 +198,6 @@ export default function CreateQuiz() {
 
                 <div className="cq-answer-row">
                   <span className="cq-answer-label">Answer:</span>
-
                   <div className="cq-answer-choices">
                     {q.options.map((_, optIndex) => (
                       <label key={optIndex} className="cq-answer-choice">
@@ -175,38 +215,34 @@ export default function CreateQuiz() {
 
                 <div className="cq-explanation-row">
                   <span className="cq-answer-label">Explanation:</span>
-                    <textarea
-                      className="cq-explanation-input"
-                      placeholder="Explain why this is the correct answer..."
-                      value={q.explanation}
-                       onChange={(e) => updateExplanation(qIndex, e.target.value)}
-                    />
+                  <textarea
+                    className="cq-explanation-input"
+                    placeholder="Explain why this is the correct answer..."
+                    value={q.explanation}
+                    onChange={(e) => updateExplanation(qIndex, e.target.value)}
+                  />
                 </div>
-
               </div>
             ))}
           </div>
 
           <div className="cq-bottom-row">
-
-  <button
-    type="button"
-    className="cq-add-question-btn"
-    onClick={addQuestion}
-  >
-    Add Question
-  </button>
-
-  <button
-    type="button"
-    className="cq-create-btn"
-    onClick={handleCreate}
-    disabled={loading}
-  >
-    {loading ? "Creating..." : "Create"}
-  </button>
-
-</div>
+            <button
+              type="button"
+              className="cq-add-question-btn"
+              onClick={addQuestion}
+            >
+              Add Question
+            </button>
+            <button
+              type="button"
+              className="cq-create-btn"
+              onClick={handleCreate}
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Create"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
