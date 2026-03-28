@@ -16,18 +16,9 @@ export default function TeacherCreateLiveSession() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fix timezone shift issue
-  const toLocalISOString = (dateStr) => {
-    const date = new Date(dateStr);
-    return new Date(
-      date.getTime() - date.getTimezoneOffset() * 60000
-    ).toISOString();
-  };
-
   const handleSubmit = async () => {
     setError(null);
 
-    // ✅ Basic validation
     if (!form.title || !form.start_time || !form.end_time) {
       setError("Please fill all required fields.");
       return;
@@ -45,8 +36,9 @@ export default function TeacherCreateLiveSession() {
         title: form.title,
         description: form.description,
         subject_id: subjectId,
-        start_time: toLocalISOString(form.start_time),
-        end_time: toLocalISOString(form.end_time),
+        // ✅ FIXED HERE
+        start_time: new Date(form.start_time).toISOString(),
+        end_time: new Date(form.end_time).toISOString(),
       });
 
       navigate(-1);
@@ -54,7 +46,6 @@ export default function TeacherCreateLiveSession() {
       console.error(err.response?.data);
 
       if (err.response?.data) {
-        // ✅ Clean error display
         const msg = Object.values(err.response.data)
           .flat()
           .join(" ");
@@ -67,7 +58,6 @@ export default function TeacherCreateLiveSession() {
     }
   };
 
-  // ✅ Prevent selecting past time
   const now = new Date();
   const minDateTime = new Date(
     now.getTime() - now.getTimezoneOffset() * 60000
