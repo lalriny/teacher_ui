@@ -1,6 +1,6 @@
 import { useLocalParticipant, useRoomContext } from "@livekit/components-react";
 import { useEffect, useState, useRef } from "react";
-import "../styles/chat.css";
+import "../../styles/chat.css";
 
 export default function ChatPanel({ role }) {
   const { localParticipant } = useLocalParticipant();

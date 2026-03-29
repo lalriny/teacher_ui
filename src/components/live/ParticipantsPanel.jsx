@@ -1,6 +1,6 @@
 import { useParticipants, useRoomContext } from "@livekit/components-react";
 import { useEffect, useState } from "react";
-import "../styles/participants.css";
+import "../../styles/participants.css";
 
 export default function ParticipantsPanel() {
   const participants = useParticipants();

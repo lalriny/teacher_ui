@@ -3,7 +3,7 @@ import { Track } from "livekit-client";
 import ParticipantsPanel from "./ParticipantsPanel";
 import ChatPanel from "./ChatPanel";
 import { useState } from "react";
-import "../styles/classroom.css";
+import "../../styles/classroom.css";
 
 export default function ClassroomUI({ role }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
