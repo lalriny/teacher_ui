@@ -14,7 +14,9 @@ export default function CreateAssignment() {
   const isEditing = Boolean(editData);
 
   const [chapters, setChapters] = useState([]);
-  const [chapterId, setChapterId] = useState(editData?.chapter_id || "");
+  const [chapterId, setChapterId] = useState(
+    editData?.chapter_id || editData?.chapter?.id || ""
+  );
   const [title, setTitle] = useState(editData?.title || "");
   const [description, setDescription] = useState(editData?.description || "");
   const [dueDate, setDueDate] = useState(
@@ -72,7 +74,7 @@ export default function CreateAssignment() {
       formData.append("chapter_id", chapterId);
       formData.append("title", title);
       formData.append("description", description);
-      formData.append("due_date", new Date(dueDate).toISOString());
+      formData.append("due_date", `${dueDate}T23:59:00`);
 
       if (file) {
         formData.append("attachment", file);
@@ -211,32 +213,72 @@ export default function CreateAssignment() {
           </div>
 
           {/* File Upload */}
-          <div className="ca-field">
+<div className="ca-field">
 
-            <label>Attach File</label>
+  <label>Attach File</label>
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              hidden
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
+  <input
+    type="file"
+    ref={fileInputRef}
+    hidden
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="ca-add-file-btn"
-            >
-              + Add File
-            </button>
+      const allowedExtensions = [".pdf", ".doc", ".docx"];
+      const name = file.name.toLowerCase();
 
-            {file && <span>{file.name}</span>}
+      if (!allowedExtensions.some(ext => name.endsWith(ext))) {
+        toast.error("Only PDF, DOC, DOCX allowed");
+        return;
+      }
 
-            {errors.file && (
-              <span className="ca-error">{errors.file}</span>
-            )}
+      setFile(file);
+    }}
+  />
 
-          </div>
+  <button
+    type="button"
+    onClick={() => fileInputRef.current?.click()}
+    className="ca-add-file-btn"
+  >
+    + Add File
+  </button>
+
+  {/* ✅ NEW: Selected file + remove */}
+  {file && (
+    <div style={{ marginTop: "6px" }}>
+      <span>{file.name}</span>
+      <button
+        type="button"
+        onClick={() => setFile(null)}
+        style={{ marginLeft: "10px" }}
+      >
+        Remove
+      </button>
+    </div>
+  )}
+
+  {/* ✅ NEW: Show existing file in edit mode */}
+  {isEditing && editData?.attachment && !file && (
+    <div style={{ marginTop: "6px" }}>
+      Existing file:
+      <a
+        href={editData.attachment}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginLeft: "6px" }}
+      >
+        View
+      </a>
+    </div>
+  )}
+
+  {errors.file && (
+    <span className="ca-error">{errors.file}</span>
+  )}
+
+</div>
 
           {/* Submit */}
           <div className="ca-actions">
