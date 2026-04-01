@@ -122,3 +122,19 @@ export async function saveAvailability(availability) {
     return availability;
   }
 }
+
+export default {
+  getSessions,
+  getRequests,
+  getHistory,
+  getSessionDetail,
+  acceptRequest,
+  declineRequest,
+  rescheduleRequest,
+  startSession,
+  endSession,
+  cancelSession,
+  getLiveKitToken,
+  getAvailability,
+  saveAvailability,
+};
