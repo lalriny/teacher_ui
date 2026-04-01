@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { FiUsers, FiHome} from "react-icons/fi";
 import { MdDashboard } from "react-icons/md";
 import { FaChalkboardTeacher } from "react-icons/fa";
-import { FiUsers } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
 import { RiLockLine, RiLiveLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
