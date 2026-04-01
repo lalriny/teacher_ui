@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FiUsers, FiHome} from "react-icons/fi";
 import { MdDashboard } from "react-icons/md";
 import { FaChalkboardTeacher } from "react-icons/fa";
 import { FiUsers } from "react-icons/fi";
@@ -114,7 +115,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <RiLockLine />
           <span>Private Sessions</span>
         </div>
-      </nav>
+            </nav>
+      <div className="sidebar__bottom">
+        <a
+          href="https://shikshacom.com"
+          className="sidebar__homeBtn"
+        >
+          <FiHome />
+          Return to Homepage
+        </a>
+      </div>
     </aside>
   );
 }
