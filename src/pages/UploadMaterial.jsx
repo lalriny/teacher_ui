@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IoChevronBack } from "react-icons/io5";
 import { FiSearch } from "react-icons/fi";
+import { MdDelete } from "react-icons/md";
 import api from "../api/apiClient";
 import "../styles/upload-material.css";
 
@@ -18,6 +19,7 @@ export default function UploadMaterial() {
   const [uploading, setUploading] = useState(false);
 
   const fileInputRef = useRef(null);
+  const controllersRef = useRef({}); // ✅ for cancel
 
   useEffect(() => {
     if (subjectId) {
@@ -39,6 +41,7 @@ export default function UploadMaterial() {
     fileInputRef.current.click();
   };
 
+  // ✅ NO simulateUpload anymore
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files || []);
     const allowedTypes = ["pdf", "doc", "docx"];
@@ -66,7 +69,6 @@ export default function UploadMaterial() {
       };
 
       newItems.push(item);
-      simulateUpload(item);
     });
 
     setFileItems((prev) => [...prev, ...newItems]);
@@ -75,28 +77,21 @@ export default function UploadMaterial() {
     e.target.value = "";
   };
 
-  const simulateUpload = (item) => {
-    let progress = 0;
+  // ✅ REMOVE FILE
+  const handleRemoveFile = (name) => {
+    setFileItems((prev) => prev.filter((f) => f.name !== name));
+    setFiles((prev) => prev.filter((f) => f.name !== name));
+  };
 
-    const interval = setInterval(() => {
-      progress += 10;
+  // ✅ CANCEL REAL UPLOAD
+  const handleCancelUpload = (name) => {
+    const controller = controllersRef.current[name];
+    if (controller) {
+      controller.abort();
+    }
 
-      setFileItems((prev) =>
-        prev.map((f) =>
-          f.name === item.name ? { ...f, progress } : f
-        )
-      );
-
-      if (progress >= 100) {
-        clearInterval(interval);
-
-        setFileItems((prev) =>
-          prev.map((f) =>
-            f.name === item.name ? { ...f, uploaded: true } : f
-          )
-        );
-      }
-    }, 200);
+    setFileItems((prev) => prev.filter((f) => f.name !== name));
+    setFiles((prev) => prev.filter((f) => f.name !== name));
   };
 
   const handleUpload = async () => {
@@ -119,29 +114,47 @@ export default function UploadMaterial() {
     try {
       setUploading(true);
 
-      const formData = new FormData();
-      formData.append("title", title);
+      for (const item of fileItems) {
 
-      fileItems.forEach((item) => {
+        const formData = new FormData();
+        formData.append("title", title);
         formData.append("files", item.file);
-      });
 
-      await api.post(
-        `/materials/chapters/${chapterId}/materials/upload/`,
-        formData
-      );
+        const controller = new AbortController();
+        controllersRef.current[item.name] = controller;
+
+        await api.post(
+          `/materials/chapters/${chapterId}/materials/upload/`,
+          formData,
+          {
+            signal: controller.signal,
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
+
+              setFileItems((prev) =>
+                prev.map((f) =>
+                  f.name === item.name ? { ...f, progress: percent } : f
+                )
+              );
+            },
+          }
+        );
+
+        setFileItems((prev) =>
+          prev.map((f) =>
+            f.name === item.name ? { ...f, uploaded: true } : f
+          )
+        );
+      }
 
       alert("Upload successful");
-
-      setFiles([]);
-      setFileItems([]);
-      setTitle("");
-      setChapterId("");
 
       navigate(`/teacher/classes/${subjectId}/study-materials`);
 
     } catch (err) {
-      console.error("Upload failed:", err.response?.data || err);
+      console.error("Upload failed:", err);
       alert("Upload failed");
     } finally {
       setUploading(false);
@@ -172,7 +185,7 @@ export default function UploadMaterial() {
 
         <div className="um-form-card">
 
-          {/* ✅ LEFT SIDE */}
+          {/* LEFT */}
           <div className="um-form-left">
 
             <h3 className="um-form-heading">
@@ -209,7 +222,7 @@ export default function UploadMaterial() {
 
           </div>
 
-          {/* ✅ RIGHT SIDE (UPLOAD PANEL) */}
+          {/* RIGHT */}
           <div className="um-upload-panel">
 
             <div className="um-upload-title">Upload File</div>
@@ -239,7 +252,13 @@ export default function UploadMaterial() {
                 {fileItems.map((item, i) => (
                   <div key={i} className="um-file-card">
 
-                    <span>{item.name}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>{item.name}</span>
+                      <MdDelete
+                        style={{ cursor: "pointer" }}
+                        onClick={() => handleRemoveFile(item.name)}
+                      />
+                    </div>
 
                     <small>
                       {(item.size / 1024).toFixed(1)} KB
@@ -253,7 +272,17 @@ export default function UploadMaterial() {
                             style={{ width: `${item.progress}%` }}
                           />
                         </div>
-                        <span>{item.progress}%</span>
+
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span>{item.progress}%</span>
+
+                          <span
+                            style={{ cursor: "pointer", color: "#ff6b6b" }}
+                            onClick={() => handleCancelUpload(item.name)}
+                          >
+                            Cancel
+                          </span>
+                        </div>
                       </>
                     ) : (
                       <span className="um-uploaded">✔ Uploaded</span>
