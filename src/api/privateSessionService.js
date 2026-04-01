@@ -6,7 +6,7 @@
  * which reuses the existing livestream token generator.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "https://api.shikshacom.com";
 
 function authHeaders() {
   const token = localStorage.getItem("access_token");
