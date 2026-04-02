@@ -316,6 +316,27 @@
   font-size: 16px;
 }
 
+/* Mute button in participant card */
+.participant-mute-btn{
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 8px;
+  background: #f9fafb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.participant-mute-btn:hover{
+  background: #fee2e2;
+  transform: scale(1.08);
+}
+
 /* CHAT PANEL*/
 
 .chat-panel{
