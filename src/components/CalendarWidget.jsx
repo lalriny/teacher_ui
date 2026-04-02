@@ -9,15 +9,6 @@ const EVENT_COLORS = {
   "quiz":         "#93A1E5",
 };
 
-// Mar 2026 event data: day → array of event types
-const calendarEvents = {
-  4:  ["live-session", "assignment"],
-  6:  ["assignment", "quiz"],
-  13: ["assignment"],
-  20: ["assignment"],
-  21: ["live-session", "assignment", "quiz"],
-};
-
 function getDateStyle(types) {
   if (!types || types.length === 0) return {};
   const colors = types.map(t => EVENT_COLORS[t]);
@@ -32,7 +23,7 @@ function getDateStyle(types) {
 
 const now = new Date();
 
-export default function CalendarWidget() {
+export default function CalendarWidget({ events = {}, selectedDate = null, onDateSelect }) {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
 
@@ -49,7 +40,11 @@ export default function CalendarWidget() {
     setYear(y);
   };
 
-  const isEventMonth = year === now.getFullYear() && month === now.getMonth();
+  const isSameDay = (d) =>
+    selectedDate &&
+    d === selectedDate.getDate() &&
+    month === selectedDate.getMonth() &&
+    year === selectedDate.getFullYear();
 
   return (
     <div className="calendar">
@@ -75,18 +70,21 @@ export default function CalendarWidget() {
 
         {[...Array(daysInMonth)].map((_, i) => {
           const day = i + 1;
+          const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const isToday =
             day === today.getDate() &&
             month === today.getMonth() &&
             year === today.getFullYear();
-          const eventTypes = isEventMonth ? calendarEvents[day] : null;
+          const isSelected = isSameDay(day);
+          const eventTypes = events[dateKey] || null;
           const eventStyle = (!isToday && eventTypes) ? getDateStyle(eventTypes) : {};
 
           return (
             <span
               key={day}
-              className={`cal-date${isToday ? " cal-today" : ""}`}
+              className={`cal-date${isToday ? " cal-today" : ""}${isSelected ? " cal-selected" : ""}`}
               style={eventStyle}
+              onClick={() => onDateSelect?.(new Date(year, month, day))}
             >
               {day}
             </span>

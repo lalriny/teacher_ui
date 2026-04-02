@@ -181,6 +181,12 @@
   background: #ef4444;
 }
 
+.cal-selected {
+  outline: 2.5px solid #13899b;
+  outline-offset: -2px;
+  font-weight: 700;
+}
+
 
 
 /* Calendar Legend */
