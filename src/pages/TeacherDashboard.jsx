@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import "../styles/dashboard.css";
 
@@ -10,6 +10,25 @@ import ActivityItem from "../components/ActivityItem";
 
 import api from "../api/apiClient";
 
+const NOTIFICATION_COLORS = {
+  assignment: "green",
+  "live-session": "yellow",
+  quiz: "purple",
+};
+
+function toDateKey(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function isSameDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 export default function TeacherDashboard() {
   const outletContext = useOutletContext();
   const active = outletContext?.active || "sessions";
@@ -18,8 +37,9 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
 
   const [assignFilter, setAssignFilter] = useState(null);
-  const [quizFilter, setQuizFilter] = useState(null);
   const [activityFilter, setActivityFilter] = useState("all");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [scheduleTypeFilter, setScheduleTypeFilter] = useState("all");
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -30,7 +50,6 @@ export default function TeacherDashboard() {
   const fetchDashboard = async () => {
     try {
       const res = await api.get("/dashboard/");
-      console.log("Dashboard data:", res.data); // 🔥 debug
       setData(res.data);
     } catch (err) {
       console.error("Dashboard error:", err);
@@ -40,23 +59,18 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   if (loading) return <div className="dashboard">Loading...</div>;
 
-  // ✅ Safe fallback
   const sessions = data?.sessions ?? [];
   const assignments = data?.assignments ?? [];
   const quizzes = data?.quizzes ?? [];
   const notifications = data?.notifications ?? [];
 
-  // ✅ Empty state
   const isAllEmpty =
     sessions.length === 0 &&
     assignments.length === 0 &&
@@ -75,25 +89,78 @@ export default function TeacherDashboard() {
       )
     : assignments;
 
-  const filteredQuizzes = quizFilter
-    ? quizzes.filter((q) =>
-        quizFilter === "overdue"
-          ? new Date(q.due) < new Date()
-          : new Date(q.due) >= new Date()
-      )
-    : quizzes;
-
   const filteredActivities = notifications.filter(
     (item) => activityFilter === "all" || item.type === activityFilter
   );
 
-  // 🔥 EMPTY UI
+  // --- Calendar events map (from real API data) ---
+  const calendarEvents = useMemo(() => {
+    const map = {};
+    const addEvent = (dateStr, type) => {
+      if (!dateStr) return;
+      const key = toDateKey(dateStr);
+      if (!map[key]) map[key] = [];
+      if (!map[key].includes(type)) map[key].push(type);
+    };
+    sessions.forEach((s) => addEvent(s.dateTime, "live-session"));
+    assignments.forEach((a) => addEvent(a.due, "assignment"));
+    quizzes.forEach((q) => addEvent(q.due, "quiz"));
+    return map;
+  }, [sessions, assignments, quizzes]);
+
+  // --- Combined schedule items (sessions + assignments + quizzes) ---
+  const scheduleItems = useMemo(() => {
+    const items = [];
+    sessions.forEach((s) =>
+      items.push({
+        id: `session-${s.id}`,
+        type: "live-session",
+        title: `${s.subject} - ${s.topic}`,
+        date: s.dateTime,
+        labelColor: "yellow",
+      })
+    );
+    assignments.forEach((a) =>
+      items.push({
+        id: `assignment-${a.id}`,
+        type: "assignment",
+        title: a.title,
+        date: a.due,
+        labelColor: "green",
+      })
+    );
+    quizzes.forEach((q) =>
+      items.push({
+        id: `quiz-${q.id}`,
+        type: "quiz",
+        title: q.title,
+        date: q.due,
+        labelColor: "purple",
+      })
+    );
+    items.sort((a, b) => new Date(a.date) - new Date(b.date));
+    return items;
+  }, [sessions, assignments, quizzes]);
+
+  // --- Filter schedule by selected date + type ---
+  const filteredSchedule = scheduleItems.filter((item) => {
+    if (selectedDate && !isSameDay(new Date(item.date), selectedDate)) return false;
+    if (scheduleTypeFilter !== "all" && item.type !== scheduleTypeFilter) return false;
+    return true;
+  });
+
+  const handleDateSelect = (date) => {
+    if (selectedDate && isSameDay(selectedDate, date)) {
+      setSelectedDate(null);
+    } else {
+      setSelectedDate(date);
+    }
+  };
+
   if (isAllEmpty) {
     return (
       <div className="dashboard">
-        <div className="dash-empty">
-          No data available yet.
-        </div>
+        <div className="dash-empty">No data available yet.</div>
       </div>
     );
   }
@@ -102,7 +169,6 @@ export default function TeacherDashboard() {
   if (isMobile) {
     return (
       <div className="dashboard">
-
         {active === "sessions" && (
           <div className="dash-card">
             <h4>Upcoming Live Sessions</h4>
@@ -125,24 +191,10 @@ export default function TeacherDashboard() {
             {filteredAssignments.map((a) => (
               <AssignmentItem
                 key={a.id}
-                id={a.title}
-                subject={a.teacher}
+                id={a.id}
+                subject={a.subject_name || a.teacher}
                 dueDate={new Date(a.due).toLocaleDateString()}
-              />
-            ))}
-          </div>
-        )}
-
-        {active === "quizzes" && (
-          <div className="dash-card">
-            <h4>Quiz</h4>
-            {filteredQuizzes.length === 0 && <p>No quizzes</p>}
-            {filteredQuizzes.map((q) => (
-              <QuizItem
-                key={q.id}
-                id={q.title}
-                subject={q.teacher}
-                dueDate={new Date(q.due).toLocaleDateString()}
+                subjectId={a.subject_id}
               />
             ))}
           </div>
@@ -157,13 +209,20 @@ export default function TeacherDashboard() {
                 key={item.id}
                 date={new Date(item.created_at).toLocaleDateString()}
                 label={item.type}
+                labelColor={NOTIFICATION_COLORS[item.type] || "green"}
                 lines={[item.title]}
               />
             ))}
           </div>
         )}
 
-        {active === "calendar" && <CalendarWidget />}
+        {active === "calendar" && (
+          <CalendarWidget
+            events={calendarEvents}
+            selectedDate={selectedDate}
+            onDateSelect={handleDateSelect}
+          />
+        )}
       </div>
     );
   }
@@ -179,7 +238,6 @@ export default function TeacherDashboard() {
               {sessions.length} Classes (Remaining classes)
             </div>
           </div>
-
           <div className="dash-live-row">
             {sessions.length === 0 && <p>No sessions</p>}
             {sessions.map((s) => (
@@ -194,14 +252,18 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <CalendarWidget />
+        <CalendarWidget
+          events={calendarEvents}
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+        />
       </div>
 
       <div className="dash-bottom">
+        {/* --- Assignments --- */}
         <div className="dash-card">
           <div className="dash-card-header">
             <h4>Assignments</h4>
-
             <div className="dash-pills">
               <button
                 type="button"
@@ -210,7 +272,6 @@ export default function TeacherDashboard() {
               >
                 Due
               </button>
-
               <button
                 type="button"
                 className={`dash-pill pill-overdue ${assignFilter === "overdue" ? "pill-active" : ""}`}
@@ -220,24 +281,24 @@ export default function TeacherDashboard() {
               </button>
             </div>
           </div>
-
           <div className="dash-card-body">
             {filteredAssignments.length === 0 && <p>No assignments</p>}
             {filteredAssignments.map((a) => (
               <AssignmentItem
                 key={a.id}
-                id={a.title}
-                subject={a.teacher}
+                id={a.id}
+                subject={a.subject_name || a.teacher}
                 dueDate={new Date(a.due).toLocaleDateString()}
+                subjectId={a.subject_id}
               />
             ))}
           </div>
         </div>
 
+        {/* --- Notifications --- */}
         <div className="dash-card">
           <div className="dash-card-header">
             <h4>Notification</h4>
-
             <select
               className="dash-filter"
               value={activityFilter}
@@ -249,7 +310,6 @@ export default function TeacherDashboard() {
               <option value="quiz">Quiz</option>
             </select>
           </div>
-
           <div className="dash-card-body">
             {filteredActivities.length === 0 && <p>No notifications</p>}
             {filteredActivities.map((item) => (
@@ -257,32 +317,43 @@ export default function TeacherDashboard() {
                 key={item.id}
                 date={new Date(item.created_at).toLocaleDateString()}
                 label={item.type}
+                labelColor={NOTIFICATION_COLORS[item.type] || "green"}
                 lines={[item.title]}
               />
             ))}
           </div>
         </div>
 
+        {/* --- Schedule (filtered by calendar date) --- */}
         <div className="dash-card">
           <div className="dash-card-header">
-            <h4>Schedule</h4>
-
-            <select className="dash-filter" defaultValue="all">
+            <h4>
+              Schedule
+              {selectedDate && (
+                <span style={{ fontWeight: 400, fontSize: "0.8rem", marginLeft: 8 }}>
+                  — {selectedDate.toLocaleDateString()}
+                </span>
+              )}
+            </h4>
+            <select
+              className="dash-filter"
+              value={scheduleTypeFilter}
+              onChange={(e) => setScheduleTypeFilter(e.target.value)}
+            >
               <option value="all">All</option>
               <option value="assignment">Assignment</option>
               <option value="live-session">Live Session</option>
               <option value="quiz">Quiz</option>
             </select>
           </div>
-
           <div className="dash-card-body">
-            {filteredQuizzes.length === 0 && filteredActivities.length === 0 && <p>No schedule</p>}
-
-            {filteredActivities.map((item) => (
+            {filteredSchedule.length === 0 && <p>No schedule</p>}
+            {filteredSchedule.map((item) => (
               <ActivityItem
-                key={`schedule-${item.id}`}
-                date={new Date(item.created_at).toLocaleDateString()}
+                key={item.id}
+                date={new Date(item.date).toLocaleDateString()}
                 label={item.type}
+                labelColor={item.labelColor}
                 lines={[item.title]}
               />
             ))}
