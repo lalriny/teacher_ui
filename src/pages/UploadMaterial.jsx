@@ -10,11 +10,9 @@ export default function UploadMaterial() {
   const navigate = useNavigate();
   const { subjectId } = useParams();
 
-  // ✅ renamed visually (still sent as title)
   const [topic, setTopic] = useState("");
   const [note, setNote] = useState("");
 
-  const [files, setFiles] = useState([]);
   const [fileItems, setFileItems] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [chapterId, setChapterId] = useState("");
@@ -36,7 +34,7 @@ export default function UploadMaterial() {
     try {
       const res = await api.get(`/courses/subjects/${subjectId}/chapters/`);
       setChapters(res.data);
-    } catch (err) {
+    } catch {
       alert("Failed to load chapters");
     }
   };
@@ -45,22 +43,66 @@ export default function UploadMaterial() {
     fileInputRef.current.click();
   };
 
-  const handleFileChange = (e) => {
+  // ✅ REAL UPLOAD
+  const handleFileChange = async (e) => {
     const selected = Array.from(e.target.files || []);
-    const newItems = selected.map(file => ({
-      file,
-      name: file.name,
-      progress: 0,
-      size: file.size,
-    }));
 
-    setFileItems(prev => [...prev, ...newItems]);
-    setFiles(prev => [...prev, ...selected]);
+    for (const file of selected) {
+
+      const item = {
+        file,
+        name: file.name,
+        progress: 0,
+        size: file.size,
+        status: "uploading",
+        id: null,
+      };
+
+      setFileItems(prev => [...prev, item]);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await api.post(`/materials/files/upload/`, formData, {
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+
+            setFileItems(prev =>
+              prev.map(f =>
+                f.name === file.name
+                  ? { ...f, progress: percent }
+                  : f
+              )
+            );
+          }
+        });
+
+        // ✅ mark complete
+        setFileItems(prev =>
+          prev.map(f =>
+            f.name === file.name
+              ? {
+                  ...f,
+                  progress: 100,
+                  status: "done",
+                  id: res.data.id
+                }
+              : f
+          )
+        );
+
+      } catch {
+        alert("Upload failed");
+      }
+    }
   };
 
+  // ✅ FIXED REMOVE (NO files state anymore)
   const handleRemoveFile = (name) => {
     setFileItems(prev => prev.filter(f => f.name !== name));
-    setFiles(prev => prev.filter(f => f.name !== name));
   };
 
   const handleUpload = async () => {
@@ -73,14 +115,22 @@ export default function UploadMaterial() {
     if (useCustomChapter && !customChapter.trim())
       return alert("Enter custom chapter");
 
-    if (files.length === 0)
+    // ✅ FIXED (use fileItems)
+    if (fileItems.length === 0)
       return alert("Add files");
+
+    // ✅ PREVENT SAVE BEFORE UPLOAD COMPLETE
+    const notUploaded = fileItems.some(item => !item.id);
+    if (notUploaded) {
+      alert("Wait for all files to finish uploading");
+      return;
+    }
 
     try {
       setUploading(true);
 
       const formData = new FormData();
-      formData.append("title", topic); // backend still expects title
+      formData.append("title", topic);
       formData.append("description", note);
 
       if (useCustomChapter) {
@@ -90,14 +140,16 @@ export default function UploadMaterial() {
         formData.append("chapter_id", chapterId);
       }
 
-      files.forEach(file => formData.append("files", file));
+      fileItems.forEach(item => {
+        formData.append("file_ids", item.id);
+      });
 
       await api.post(`/materials/materials/upload/`, formData);
 
       alert("Saved successfully");
       navigate(`/teacher/classes/${subjectId}/study-materials`);
 
-    } catch (err) {
+    } catch {
       alert("Upload failed");
     } finally {
       setUploading(false);
@@ -112,7 +164,6 @@ export default function UploadMaterial() {
         <IoChevronBack /> Back
       </button>
 
-      {/* ✅ HEADER WITH SAVE BUTTON */}
       <div className="um-header">
         <h2 className="um-title">Mathematics</h2>
 
@@ -177,7 +228,6 @@ export default function UploadMaterial() {
               )}
             </div>
 
-            {/* ✅ TOPIC */}
             <div className="um-field">
               <label className="um-label">Topic</label>
               <input
@@ -187,7 +237,6 @@ export default function UploadMaterial() {
               />
             </div>
 
-            {/* ✅ NOTE */}
             <div className="um-field">
               <label className="um-label">Note</label>
               <textarea

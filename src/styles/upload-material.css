@@ -146,6 +146,7 @@ textarea.um-input {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-height: 420px;
 }
 
 .um-upload-title {
@@ -174,6 +175,8 @@ textarea.um-input {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 .um-file-card {
