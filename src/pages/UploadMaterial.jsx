@@ -16,10 +16,14 @@ export default function UploadMaterial() {
   const [fileItems, setFileItems] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [chapterId, setChapterId] = useState("");
+
+  // ✅ NEW
+  const [useCustomChapter, setUseCustomChapter] = useState(false);
+  const [customChapter, setCustomChapter] = useState("");
+
   const [uploading, setUploading] = useState(false);
 
   const fileInputRef = useRef(null);
-  const controllersRef = useRef({}); // ✅ for cancel
 
   useEffect(() => {
     if (subjectId) {
@@ -41,7 +45,6 @@ export default function UploadMaterial() {
     fileInputRef.current.click();
   };
 
-  // ✅ NO simulateUpload anymore
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files || []);
     const allowedTypes = ["pdf", "doc", "docx"];
@@ -64,7 +67,6 @@ export default function UploadMaterial() {
         file,
         name: file.name,
         progress: 0,
-        uploaded: false,
         size: file.size,
       };
 
@@ -77,79 +79,64 @@ export default function UploadMaterial() {
     e.target.value = "";
   };
 
-  // ✅ REMOVE FILE
   const handleRemoveFile = (name) => {
     setFileItems((prev) => prev.filter((f) => f.name !== name));
     setFiles((prev) => prev.filter((f) => f.name !== name));
   };
 
-  // ✅ CANCEL REAL UPLOAD
-  const handleCancelUpload = (name) => {
-    const controller = controllersRef.current[name];
-    if (controller) {
-      controller.abort();
-    }
-
-    setFileItems((prev) => prev.filter((f) => f.name !== name));
-    setFiles((prev) => prev.filter((f) => f.name !== name));
-  };
-
+  // ✅ FIXED UPLOAD (ONE REQUEST)
   const handleUpload = async () => {
 
     if (!title.trim()) {
-      alert("Please enter a title");
+      alert("Enter title");
       return;
     }
 
-    if (!chapterId) {
-      alert("Please select a chapter");
+    if (!useCustomChapter && !chapterId) {
+      alert("Select chapter");
+      return;
+    }
+
+    if (useCustomChapter && !customChapter.trim()) {
+      alert("Enter custom chapter");
       return;
     }
 
     if (files.length === 0) {
-      alert("Please attach at least one file");
+      alert("Add files");
       return;
     }
 
     try {
       setUploading(true);
 
-      for (const item of fileItems) {
+      const formData = new FormData();
+      formData.append("title", title);
 
-        const formData = new FormData();
-        formData.append("title", title);
-        formData.append("files", item.file);
-
-        const controller = new AbortController();
-        controllersRef.current[item.name] = controller;
-
-        await api.post(
-          `/materials/chapters/${chapterId}/materials/upload/`,
-          formData,
-          {
-            signal: controller.signal,
-            onUploadProgress: (progressEvent) => {
-              const percent = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-
-              setFileItems((prev) =>
-                prev.map((f) =>
-                  f.name === item.name ? { ...f, progress: percent } : f
-                )
-              );
-            },
-          }
-        );
-
-        setFileItems((prev) =>
-          prev.map((f) =>
-            f.name === item.name ? { ...f, uploaded: true } : f
-          )
-        );
+      if (useCustomChapter) {
+        formData.append("custom_chapter", customChapter);
+        formData.append("subject_id", subjectId);
+      } else {
+        formData.append("chapter_id", chapterId);
       }
 
-      alert("Upload successful");
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      await api.post(`/materials/materials/upload/`, formData, {
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+
+          setFileItems((prev) =>
+            prev.map((f) => ({ ...f, progress: percent }))
+          );
+        },
+      });
+
+      alert("Saved successfully");
 
       navigate(`/teacher/classes/${subjectId}/study-materials`);
 
@@ -202,22 +189,51 @@ export default function UploadMaterial() {
               />
             </div>
 
+            {/* ✅ UPDATED CHAPTER FIELD */}
             <div className="um-field">
               <label className="um-label">Chapter</label>
 
-              <select
-                className="um-input"
-                value={chapterId}
-                onChange={(e) => setChapterId(e.target.value)}
-              >
-                <option value="">Select Chapter</option>
+              {!useCustomChapter ? (
+                <>
+                  <select
+                    className="um-input"
+                    value={chapterId}
+                    onChange={(e) => setChapterId(e.target.value)}
+                  >
+                    <option value="">Select Chapter</option>
 
-                {chapters.map((chapter) => (
-                  <option key={chapter.id} value={chapter.id}>
-                    {chapter.title}
-                  </option>
-                ))}
-              </select>
+                    {chapters.map((chapter) => (
+                      <option key={chapter.id} value={chapter.id}>
+                        {chapter.title}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    className="um-custom-btn"
+                    onClick={() => setUseCustomChapter(true)}
+                  >
+                    Custom
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    className="um-input"
+                    placeholder="Enter new chapter"
+                    value={customChapter}
+                    onChange={(e) => setCustomChapter(e.target.value)}
+                  />
+
+                  <button
+                    className="um-custom-btn"
+                    onClick={() => setUseCustomChapter(false)}
+                  >
+                    Use Existing
+                  </button>
+                </>
+              )}
             </div>
 
           </div>
@@ -264,29 +280,14 @@ export default function UploadMaterial() {
                       {(item.size / 1024).toFixed(1)} KB
                     </small>
 
-                    {!item.uploaded ? (
-                      <>
-                        <div className="um-progress-bar">
-                          <div
-                            className="um-progress-fill"
-                            style={{ width: `${item.progress}%` }}
-                          />
-                        </div>
+                    <div className="um-progress-bar">
+                      <div
+                        className="um-progress-fill"
+                        style={{ width: `${item.progress}%` }}
+                      />
+                    </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span>{item.progress}%</span>
-
-                          <span
-                            style={{ cursor: "pointer", color: "#ff6b6b" }}
-                            onClick={() => handleCancelUpload(item.name)}
-                          >
-                            Cancel
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <span className="um-uploaded">✔ Uploaded</span>
-                    )}
+                    <span>{item.progress}%</span>
 
                   </div>
                 ))}
@@ -298,7 +299,7 @@ export default function UploadMaterial() {
               onClick={handleUpload}
               disabled={uploading}
             >
-              {uploading ? "Uploading..." : "Upload"}
+              {uploading ? "Saving..." : "Save"}
             </button>
 
           </div>
