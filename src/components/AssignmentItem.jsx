@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
-export default function AssignmentItem({ id, subject, dueDate, submissionRate, subjectId, defaultExpanded = false }) {
+export default function AssignmentItem({ id, title, subject, dueDate, submissionRate, subjectId, defaultExpanded = false }) {
 
   const [expanded, setExpanded] = useState(defaultExpanded);
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function AssignmentItem({ id, subject, dueDate, submissionRate, s
     <div className="acc-item">
 
       <div className="acc-header" onClick={() => setExpanded(!expanded)}>
-        <span className="acc-id">{id}</span>
+        <span className="acc-id">{title || id}</span>
 
         {expanded
           ? <MdExpandLess className="acc-arrow" />

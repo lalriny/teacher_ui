@@ -192,6 +192,7 @@ export default function TeacherDashboard() {
               <AssignmentItem
                 key={a.id}
                 id={a.id}
+                title={a.title}
                 subject={a.subject_name || a.teacher}
                 dueDate={new Date(a.due).toLocaleDateString()}
                 subjectId={a.subject_id}
@@ -287,6 +288,7 @@ export default function TeacherDashboard() {
               <AssignmentItem
                 key={a.id}
                 id={a.id}
+                title={a.title}
                 subject={a.subject_name || a.teacher}
                 dueDate={new Date(a.due).toLocaleDateString()}
                 subjectId={a.subject_id}
