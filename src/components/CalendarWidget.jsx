@@ -4,9 +4,9 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const EVENT_COLORS = {
-  "assignment":   "#57D982",
-  "live-session": "#FAFA70",
-  "quiz":         "#93A1E5",
+  "assignment":      "#57D982",
+  "quiz":            "#93A1E5",
+  "private-session": "#FF8A65",
 };
 
 function getDateStyle(types) {
@@ -99,12 +99,12 @@ export default function CalendarWidget({ events = {}, selectedDate = null, onDat
           Assignment
         </span>
         <span className="cal-legend-item">
-          <span className="cal-legend-dot" style={{ background: "#FAFA70", border: "1px solid #ccc" }} />
-          Live Session
-        </span>
-        <span className="cal-legend-item">
           <span className="cal-legend-dot" style={{ background: "#93A1E5" }} />
           Quiz
+        </span>
+        <span className="cal-legend-item">
+          <span className="cal-legend-dot" style={{ background: "#FF8A65" }} />
+          Private Session
         </span>
       </div>
     </div>

@@ -12,8 +12,15 @@ import api from "../api/apiClient";
 const NOTIFICATION_COLORS = {
   assignment: "green",
   "live-session": "yellow",
+  "private-session": "orange",
   quiz: "purple",
 };
+
+const DATE_FORMAT = { day: "2-digit", month: "short", year: "numeric" };
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString("en-GB", DATE_FORMAT);
+}
 
 function toDateKey(dateStr) {
   const d = new Date(dateStr);
@@ -69,9 +76,10 @@ export default function TeacherDashboard() {
   const allSessions = data?.all_sessions ?? sessions;
   const assignments = data?.assignments ?? [];
   const quizzes = data?.quizzes ?? [];
+  const privateSessions = data?.private_sessions ?? [];
   const notifications = data?.notifications ?? [];
 
-  // --- Calendar events map (from real API data) ---
+  // --- Calendar events map (NO live sessions, YES private sessions) ---
   const calendarEvents = useMemo(() => {
     const map = {};
     const addEvent = (dateStr, type) => {
@@ -80,13 +88,13 @@ export default function TeacherDashboard() {
       if (!map[key]) map[key] = [];
       if (!map[key].includes(type)) map[key].push(type);
     };
-    allSessions.forEach((s) => addEvent(s.dateTime, "live-session"));
     assignments.forEach((a) => addEvent(a.due, "assignment"));
     quizzes.forEach((q) => addEvent(q.due, "quiz"));
+    privateSessions.forEach((ps) => addEvent(ps.date, "private-session"));
     return map;
-  }, [allSessions, assignments, quizzes]);
+  }, [assignments, quizzes, privateSessions]);
 
-  // --- Combined schedule items (sessions + assignments + quizzes) ---
+  // --- Combined schedule items (all types including private sessions) ---
   const scheduleItems = useMemo(() => {
     const items = [];
     allSessions.forEach((s) =>
@@ -119,9 +127,19 @@ export default function TeacherDashboard() {
         link: q.subject_id ? `/teacher/classes/${q.subject_id}/quizzes/${q.id}` : null,
       })
     );
+    privateSessions.forEach((ps) =>
+      items.push({
+        id: `private-${ps.id}`,
+        type: "private-session",
+        title: `${ps.subject} (${ps.student})`,
+        date: ps.date,
+        labelColor: "orange",
+        link: `/teacher/private-sessions/scheduled/${ps.id}`,
+      })
+    );
     items.sort((a, b) => new Date(a.date) - new Date(b.date));
     return items;
-  }, [allSessions, assignments, quizzes]);
+  }, [allSessions, assignments, quizzes, privateSessions]);
 
   // All hooks are above this point — safe to do early returns now
 
@@ -131,6 +149,7 @@ export default function TeacherDashboard() {
     sessions.length === 0 &&
     assignments.length === 0 &&
     quizzes.length === 0 &&
+    privateSessions.length === 0 &&
     notifications.length === 0;
 
   const toggleFilter = (current, value, setter) => {
@@ -210,7 +229,7 @@ export default function TeacherDashboard() {
                 id={a.id}
                 title={a.title}
                 subject={a.subject_name || a.teacher}
-                dueDate={new Date(a.due).toLocaleDateString("en-GB")}
+                dueDate={formatDate(a.due)}
                 subjectId={a.subject_id}
               />
             ))}
@@ -224,7 +243,7 @@ export default function TeacherDashboard() {
             {filteredActivities.map((item) => (
               <ActivityItem
                 key={item.id}
-                date={new Date(item.created_at).toLocaleDateString("en-GB")}
+                date={formatDate(item.created_at)}
                 label={item.type}
                 labelColor={NOTIFICATION_COLORS[item.type] || "green"}
                 lines={[item.title]}
@@ -310,7 +329,7 @@ export default function TeacherDashboard() {
                 id={a.id}
                 title={a.title}
                 subject={a.subject_name || a.teacher}
-                dueDate={new Date(a.due).toLocaleDateString("en-GB")}
+                dueDate={formatDate(a.due)}
                 subjectId={a.subject_id}
               />
             ))}
@@ -329,6 +348,7 @@ export default function TeacherDashboard() {
               <option value="all">All</option>
               <option value="assignment">Assignment</option>
               <option value="live-session">Live Session</option>
+              <option value="private-session">Private Session</option>
               <option value="quiz">Quiz</option>
             </select>
           </div>
@@ -337,7 +357,7 @@ export default function TeacherDashboard() {
             {filteredActivities.map((item) => (
               <ActivityItem
                 key={item.id}
-                date={new Date(item.created_at).toLocaleDateString("en-GB")}
+                date={formatDate(item.created_at)}
                 label={item.type}
                 labelColor={NOTIFICATION_COLORS[item.type] || "green"}
                 lines={[item.title]}
@@ -357,7 +377,7 @@ export default function TeacherDashboard() {
               Schedule
               {selectedDate && (
                 <span style={{ fontWeight: 400, fontSize: "0.8rem", marginLeft: 8 }}>
-                  — {selectedDate.toLocaleDateString("en-GB")}
+                  — {selectedDate.toLocaleDateString("en-GB", DATE_FORMAT)}
                 </span>
               )}
             </h4>
@@ -369,6 +389,7 @@ export default function TeacherDashboard() {
               <option value="all">All</option>
               <option value="assignment">Assignment</option>
               <option value="live-session">Live Session</option>
+              <option value="private-session">Private Session</option>
               <option value="quiz">Quiz</option>
             </select>
           </div>
@@ -377,7 +398,7 @@ export default function TeacherDashboard() {
             {filteredSchedule.map((item) => (
               <ActivityItem
                 key={item.id}
-                date={new Date(item.date).toLocaleDateString("en-GB")}
+                date={formatDate(item.date)}
                 label={item.type}
                 labelColor={item.labelColor}
                 lines={[item.title]}
