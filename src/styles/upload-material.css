@@ -1,8 +1,17 @@
+/* ✅ GLOBAL BACKGROUND */
+body {
+  background: #e9eef3;
+}
+
+/* PAGE WRAPPER */
 .upload-material-page {
   display: flex;
   flex-direction: column;
   gap: 12px;
   height: 100%;
+  background: #f5f7fa;
+  border-radius: 18px;
+  padding: 16px;
 }
 
 /* BACK */
@@ -21,11 +30,11 @@
   width: fit-content;
 }
 
-/* ✅ NEW HEADER (IMPORTANT) */
+/* HEADER */
 .um-header {
-  background: #eef3f7;
-  border-radius: 16px;
-  padding: 18px 28px;
+  background: #f0f4f8;
+  border-radius: 14px;
+  padding: 18px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -38,7 +47,7 @@
   margin: 0;
 }
 
-/* ✅ SAVE BUTTON TOP RIGHT */
+/* SAVE BUTTON */
 .um-save-btn {
   background: #4b6482;
   color: white;
@@ -54,26 +63,32 @@
   background: #3f5670;
 }
 
+/* ✅ FOR BOTTOM POSITION */
+.um-save-bottom {
+  margin-top: auto;
+  align-self: flex-end;
+}
+
 /* CONTAINER */
 .um-form-container {
-  background: #eef3f7;
+  background: #f0f4f8;
   border-radius: 16px;
-  padding: 40px 32px;
+  padding: 30px;
   flex: 1;
   display: flex;
-  justify-content: flex-start; /* ✅ FIX alignment */
+  justify-content: center;
   align-items: flex-start;
 }
 
 /* CARD */
 .um-form-card {
-  background: #f0ece4;
+  background: #eae4db;
   border-radius: 12px;
-  padding: 40px 50px;
+  padding: 36px 48px;
   width: 100%;
-  max-width: 1100px; /* ✅ wider like figma */
+  max-width: 1000px;
   display: flex;
-  gap: 60px; /* ✅ spacing */
+  gap: 60px;
   align-items: flex-start;
 }
 
@@ -85,21 +100,22 @@
   gap: 20px;
 }
 
+/* ✅ FIX: LABEL ABOVE INPUT */
 .um-field {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .um-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1f2d3d;
-  width: 80px; /* ✅ align labels */
 }
 
+/* INPUT */
 .um-input {
-  flex: 1;
+  width: 100%;
   padding: 8px 10px;
   border: none;
   border-bottom: 1px solid #999;
@@ -130,6 +146,7 @@ textarea.um-input {
   padding: 6px 12px;
   font-size: 12px;
   cursor: pointer;
+  width: fit-content;
 }
 
 .um-custom-btn:hover {
@@ -139,7 +156,7 @@ textarea.um-input {
 /* RIGHT PANEL */
 .um-upload-panel {
   width: 340px;
-  background: #4b6482;
+  background: #5a6f8d;
   border-radius: 12px;
   padding: 20px;
   color: white;
@@ -179,8 +196,9 @@ textarea.um-input {
   overflow-y: auto;
 }
 
+/* FILE CARD */
 .um-file-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   padding: 10px;
   border-radius: 8px;
   font-size: 12px;
@@ -208,5 +226,3 @@ textarea.um-input {
   text-align: center;
   opacity: 0.8;
 }
-
-

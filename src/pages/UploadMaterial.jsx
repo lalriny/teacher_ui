@@ -43,7 +43,6 @@ export default function UploadMaterial() {
     fileInputRef.current.click();
   };
 
-  // ✅ REAL UPLOAD
   const handleFileChange = async (e) => {
     const selected = Array.from(e.target.files || []);
 
@@ -80,7 +79,6 @@ export default function UploadMaterial() {
           }
         });
 
-        // ✅ mark complete
         setFileItems(prev =>
           prev.map(f =>
             f.name === file.name
@@ -100,7 +98,6 @@ export default function UploadMaterial() {
     }
   };
 
-  // ✅ FIXED REMOVE (NO files state anymore)
   const handleRemoveFile = (name) => {
     setFileItems(prev => prev.filter(f => f.name !== name));
   };
@@ -115,11 +112,9 @@ export default function UploadMaterial() {
     if (useCustomChapter && !customChapter.trim())
       return alert("Enter custom chapter");
 
-    // ✅ FIXED (use fileItems)
     if (fileItems.length === 0)
       return alert("Add files");
 
-    // ✅ PREVENT SAVE BEFORE UPLOAD COMPLETE
     const notUploaded = fileItems.some(item => !item.id);
     if (notUploaded) {
       alert("Wait for all files to finish uploading");
@@ -166,14 +161,6 @@ export default function UploadMaterial() {
 
       <div className="um-header">
         <h2 className="um-title">Mathematics</h2>
-
-        <button
-          className="um-save-btn"
-          onClick={handleUpload}
-          disabled={uploading}
-        >
-          {uploading ? "Saving..." : "Save"}
-        </button>
       </div>
 
       <div className="um-form-container">
@@ -271,7 +258,7 @@ export default function UploadMaterial() {
             </button>
 
             <div className="um-upload-info">
-              Max 50MB • PDF, DOC, DOCX
+              Max 50MB/file • PDF, DOC, DOCX
             </div>
 
             {fileItems.length > 0 && (
@@ -298,12 +285,23 @@ export default function UploadMaterial() {
                       />
                     </div>
 
-                    <span>{item.progress}%</span>
+                    <span>
+                      {item.status === "done" ? "Completed" : `${item.progress}%`}
+                    </span>
 
                   </div>
                 ))}
               </div>
             )}
+
+            {/* ✅ SAVE BUTTON AT BOTTOM */}
+            <button
+              className="um-save-btn um-save-bottom"
+              onClick={handleUpload}
+              disabled={uploading}
+            >
+              {uploading ? "Saving..." : "Save"}
+            </button>
 
           </div>
 
