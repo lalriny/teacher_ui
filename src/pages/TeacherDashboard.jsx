@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import "../styles/dashboard.css";
 
 import LiveSessionCard from "../components/LiveSessionCard";
@@ -31,6 +31,7 @@ function isSameDay(a, b) {
 export default function TeacherDashboard() {
   const outletContext = useOutletContext();
   const active = outletContext?.active || "sessions";
+  const navigate = useNavigate();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -94,6 +95,7 @@ export default function TeacherDashboard() {
         title: `${s.subject} - ${s.topic}`,
         date: s.dateTime,
         labelColor: "yellow",
+        link: `/live/${s.id}`,
       })
     );
     assignments.forEach((a) =>
@@ -103,6 +105,7 @@ export default function TeacherDashboard() {
         title: a.title,
         date: a.due,
         labelColor: "green",
+        link: a.subject_id ? `/teacher/classes/${a.subject_id}/assignments/${a.id}` : null,
       })
     );
     quizzes.forEach((q) =>
@@ -112,6 +115,7 @@ export default function TeacherDashboard() {
         title: q.title,
         date: q.due,
         labelColor: "purple",
+        link: q.subject_id ? `/teacher/classes/${q.subject_id}/quizzes/${q.id}` : null,
       })
     );
     items.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -156,6 +160,16 @@ export default function TeacherDashboard() {
     } else {
       setSelectedDate(date);
     }
+  };
+
+  const getNotificationLink = (item) => {
+    if (item.type === "assignment" && item.subject_id)
+      return `/teacher/classes/${item.subject_id}/assignments`;
+    if (item.type === "live-session")
+      return `/teacher/classes/${item.subject_id}/live-sessions`;
+    if (item.type === "quiz" && item.subject_id)
+      return `/teacher/classes/${item.subject_id}/quizzes`;
+    return null;
   };
 
   if (isAllEmpty) {
@@ -213,6 +227,10 @@ export default function TeacherDashboard() {
                 label={item.type}
                 labelColor={NOTIFICATION_COLORS[item.type] || "green"}
                 lines={[item.title]}
+                onClick={() => {
+                  const link = getNotificationLink(item);
+                  if (link) navigate(link);
+                }}
               />
             ))}
           </div>
@@ -322,6 +340,10 @@ export default function TeacherDashboard() {
                 label={item.type}
                 labelColor={NOTIFICATION_COLORS[item.type] || "green"}
                 lines={[item.title]}
+                onClick={() => {
+                  const link = getNotificationLink(item);
+                  if (link) navigate(link);
+                }}
               />
             ))}
           </div>
@@ -358,6 +380,9 @@ export default function TeacherDashboard() {
                 label={item.type}
                 labelColor={item.labelColor}
                 lines={[item.title]}
+                onClick={() => {
+                  if (item.link) navigate(item.link);
+                }}
               />
             ))}
           </div>
