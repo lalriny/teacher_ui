@@ -3,14 +3,14 @@ body {
   background: #C8D0D3;
 }
 
-/* PAGE WRAPPER (REMOVE EXTRA WHITE FEEL) */
+/* PAGE WRAPPER */
 .upload-material-page {
   display: flex;
   flex-direction: column;
   gap: 12px;
   height: 100%;
   padding: 16px;
-  background:#C8D0D3;
+  background: #C8D0D3;
 }
 
 /* BACK */
@@ -59,15 +59,15 @@ body {
   background: #3f5670;
 }
 
-/* ✅ SAVE BUTTON OUTSIDE */
+/* SAVE BUTTON OUTSIDE */
 .um-save-outside {
   margin-top: 10px;
   align-self: flex-end;
 }
 
-/* CONTAINER */
+/* ❗ FIX: REMOVE EXTRA BACKGROUND LAYER */
 .um-form-container {
-  background: #eceff0;
+  background: transparent; /* ✅ changed from #eceff0 */
   border-radius: 16px;
   padding: 30px;
   flex: 1;
@@ -96,7 +96,7 @@ body {
   gap: 20px;
 }
 
-/* ✅ INLINE LIKE FIGMA */
+/* INLINE LIKE FIGMA */
 .um-field {
   display: flex;
   align-items: center;
@@ -133,7 +133,7 @@ textarea.um-input {
   resize: none;
 }
 
-/* CUSTOM BUTTON INLINE */
+/* CUSTOM BUTTON */
 .um-custom-btn {
   background: #4b6482;
   color: white;
