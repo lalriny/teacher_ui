@@ -26,6 +26,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     fetchClasses();
   }, []);
 
+  const getClassMeta = (cls) => {
+    const meta = [cls.course_title, cls.board, cls.stream]
+      .filter(Boolean)
+      .join(" • ");
+
+    return meta ? ` (${meta})` : "";
+  };
+
   return (
     <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
       <div className="sidebar-top">
@@ -88,7 +96,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 setSidebarOpen(false);
               }}
             >
-              {cls.subject_name} ({cls.course_title})
+              {cls.subject_name}
+              {getClassMeta(cls)}
             </p>
           ))}
         </div>

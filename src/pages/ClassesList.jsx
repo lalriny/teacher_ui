@@ -23,6 +23,8 @@ export default function ClassesList() {
           subjectId: s.subject_id || s.id,
           subjectName: s.subject_name || s.name,
           courseTitle: s.course_title || "",
+          board: s.board || "",
+          stream: s.stream || "",
         }));
 
         setSubjects(normalized);
@@ -39,6 +41,11 @@ export default function ClassesList() {
   }, []);
 
   if (loading) return <div>Loading classes...</div>;
+
+  const getClassMeta = (subject) =>
+    [subject.courseTitle, subject.board, subject.stream]
+      .filter(Boolean)
+      .join(" • ");
 
   return (
     <div className="cl-wrapper">
@@ -66,7 +73,6 @@ export default function ClassesList() {
           )}
 
           {subjects.map((subject) => (
-
             <div
               className="cl-card"
               key={subject.subjectId}
@@ -84,7 +90,7 @@ export default function ClassesList() {
               <div className="cl-card-right">
 
                 <span className="cl-card-label">
-                  {subject.courseTitle}
+                  {getClassMeta(subject)}
                 </span>
 
               </div>
