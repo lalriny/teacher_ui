@@ -1,7 +1,8 @@
 /* =====================================================
    privateClassroom.css — Teacher UI
    Dark theme for private session room UI.
-   Base styles identical to Student + teacher-specific additions.
+   BASE STYLES COPIED FROM STUDENT privateClassroom.css
+   + Teacher-specific additions at bottom.
    Scoped with pvt- prefix to avoid conflicts.
    ===================================================== */
 
@@ -113,16 +114,6 @@
   border-radius: 8px;
 }
 
-.pvt-tile-speaking {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34,197,94,0.3);
-}
-
-.pvt-tile-pinned {
-  border-color: #4f7ef7;
-  box-shadow: 0 0 0 2px rgba(79,126,247,0.3);
-}
-
 .pvt-tile-label {
   position: absolute;
   bottom: 10px; left: 10px;
@@ -142,6 +133,37 @@
   border-radius: 4px;
   font-weight: 600;
   margin-left: 4px;
+}
+
+/* ── Placeholder (cam off) ── */
+.pvt-placeholder {
+  width: 100%; height: 100%;
+  background: #111827;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+}
+
+.pvt-placeholder-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #2a9da8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 800; color: white;
+}
+
+.pvt-placeholder-name {
+  font-size: 12px; color: #6b7591;
+}
+
+/* ── Speaking / Pinned tile borders ── */
+.pvt-tile-speaking {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34,197,94,0.3);
+}
+
+.pvt-tile-pinned {
+  border-color: #4f7ef7;
+  box-shadow: 0 0 0 2px rgba(79,126,247,0.3);
 }
 
 .pvt-speaking-dot {
@@ -212,32 +234,12 @@
   flex-shrink: 0;
 }
 
-/* ── Placeholder (cam off) ── */
-.pvt-placeholder {
-  width: 100%; height: 100%;
-  background: #111827;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 10px;
-}
-
-.pvt-placeholder-avatar {
-  width: 64px; height: 64px;
-  border-radius: 50%;
-  background: #2a9da8;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; font-weight: 800; color: white;
-}
-
-.pvt-placeholder-name {
-  font-size: 12px; color: #6b7591;
-}
-
 /* ── Screen share tile override — contain to show full screen ── */
 .pvt-tile-screenshare video {
   object-fit: contain;
 }
 
-/* ── Screen Share Layout ── */
+/* ── Screen Share / Spotlight Layout ── */
 .pvt-screen-layout {
   flex: 1;
   display: flex;
@@ -469,6 +471,7 @@
 
 /* ══════════════════════════════════════════════════════
    TEACHER-SPECIFIC ADDITIONS
+   (these do NOT exist in Student CSS)
    ══════════════════════════════════════════════════════ */
 
 /* ── Tile host actions (hover to show on student tiles) ── */
