@@ -4,68 +4,85 @@ import { IoChevronBack } from "react-icons/io5";
 import api from "../api/apiClient";
 import "../styles/live-session-create.css";
 
+/* =====================================
+   🔥 TIME HELPERS
+===================================== */
+
+// Round to nearest 15 min
+function roundToSlot(date) {
+  const d = new Date(date);
+  const minutes = d.getMinutes();
+
+  const rounded = Math.ceil(minutes / 15) * 15;
+  d.setMinutes(rounded);
+  d.setSeconds(0);
+  d.setMilliseconds(0);
+
+  return d;
+}
+
+// Convert to datetime-local format
+function toLocalInput(date) {
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 export default function TeacherCreateLiveSession() {
   const { subjectId } = useParams();
   const navigate = useNavigate();
 
+  const now = roundToSlot(new Date());
+
   const [form, setForm] = useState({
     title: "",
     description: "",
-    start_time: "",
-    end_time: "",
+    start_time: toLocalInput(now),
+    duration: 60, // default 1 hour
   });
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ FIX: proper local min datetime with buffer
-  const getMinDateTime = () => {
-    const now = new Date();
-
-    // 🔥 ADD BUFFER (prevents backend "past" rejection)
-    now.setMinutes(now.getMinutes() + 2);
-
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-
-    const offset = now.getTimezoneOffset();
-    const local = new Date(now.getTime() - offset * 60000);
-
-    return local.toISOString().slice(0, 16);
+  /* =====================================
+     🔥 HANDLE START TIME CHANGE
+  ===================================== */
+  const handleStartTimeChange = (value) => {
+    const rounded = roundToSlot(new Date(value));
+    setForm({
+      ...form,
+      start_time: toLocalInput(rounded),
+    });
   };
 
-  const minDateTime = getMinDateTime();
-
+  /* =====================================
+     🔥 HANDLE SUBMIT
+  ===================================== */
   const handleSubmit = async () => {
     setError(null);
 
-    if (!form.title || !form.start_time || !form.end_time) {
+    if (!form.title || !form.start_time) {
       setError("Please fill all required fields.");
-      return;
-    }
-
-    if (new Date(form.start_time) >= new Date(form.end_time)) {
-      setError("End time must be after start time.");
       return;
     }
 
     try {
       setLoading(true);
 
+      const start = new Date(form.start_time);
+      const end = new Date(start.getTime() + form.duration * 60000);
+
       await api.post("/livestream/sessions/", {
         title: form.title,
         description: form.description,
         subject_id: subjectId,
-
-        // ✅ CORRECT (UTC for Django)
-        start_time: new Date(form.start_time).toISOString(),
-        end_time: new Date(form.end_time).toISOString(),
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
       });
 
       navigate(-1);
     } catch (err) {
       console.error(err);
-      console.log("🔥 Backend Error:", err.response?.data);
 
       setError(
         err.response?.data?.detail ||
@@ -80,6 +97,18 @@ export default function TeacherCreateLiveSession() {
     }
   };
 
+  /* =====================================
+     🔥 UI
+  ===================================== */
+
+  const durationOptions = [
+    { label: "+30 min", value: 30 },
+    { label: "+1 hr", value: 60 },
+    { label: "+2 hr", value: 120 },
+    { label: "+3 hr", value: 180 },
+    { label: "+4 hr", value: 240 },
+  ];
+
   return (
     <div className="lsc-page">
 
@@ -89,18 +118,15 @@ export default function TeacherCreateLiveSession() {
 
       <div className="lsc-card">
         <h2 className="lsc-title">Schedule Live Session</h2>
-        <p className="lsc-subtitle">
-          Fill in the details to create a new live class for your students.
-        </p>
 
         {error && <div className="lsc-error">⚠ {error}</div>}
 
         <div className="lsc-form">
 
+          {/* TITLE */}
           <div className="lsc-field">
-            <label className="lsc-label">Session Title *</label>
+            <label>Session Title *</label>
             <input
-              className="lsc-input"
               value={form.title}
               onChange={(e) =>
                 setForm({ ...form, title: e.target.value })
@@ -108,10 +134,10 @@ export default function TeacherCreateLiveSession() {
             />
           </div>
 
+          {/* DESCRIPTION */}
           <div className="lsc-field">
-            <label className="lsc-label">Description</label>
+            <label>Description</label>
             <textarea
-              className="lsc-textarea"
               value={form.description}
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
@@ -119,48 +145,55 @@ export default function TeacherCreateLiveSession() {
             />
           </div>
 
-          <hr className="lsc-divider" />
+          <hr />
 
-          <div className="lsc-row">
-            <div className="lsc-field">
-              <label className="lsc-label">Start Time *</label>
-              <input
-                type="datetime-local"
-                className="lsc-input"
-                value={form.start_time}
-                min={minDateTime}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    start_time: e.target.value,
-                  })
-                }
-              />
-            </div>
+          {/* START TIME */}
+          <div className="lsc-field">
+            <label>Start Time (15-min slots)</label>
+            <input
+              type="datetime-local"
+              value={form.start_time}
+              onChange={(e) => handleStartTimeChange(e.target.value)}
+            />
+          </div>
 
-            <div className="lsc-field">
-              <label className="lsc-label">End Time *</label>
-              <input
-                type="datetime-local"
-                className="lsc-input"
-                value={form.end_time}
-                min={form.start_time || minDateTime}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    end_time: e.target.value,
-                  })
-                }
-              />
+          {/* DURATION BUTTONS */}
+          <div className="lsc-field">
+            <label>Duration</label>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {durationOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    setForm({ ...form, duration: opt.value })
+                  }
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border:
+                      form.duration === opt.value
+                        ? "2px solid #2563eb"
+                        : "1px solid #ccc",
+                    background:
+                      form.duration === opt.value ? "#e0edff" : "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* SUBMIT */}
           <button
-            className="lsc-submit"
             onClick={handleSubmit}
             disabled={loading}
+            className="lsc-submit"
           >
-            {loading ? "Creating Session…" : "Create Live Session"}
+            {loading ? "Creating..." : "Create Live Session"}
           </button>
 
         </div>
