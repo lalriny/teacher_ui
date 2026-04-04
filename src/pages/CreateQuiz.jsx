@@ -1,339 +1,369 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { IoChevronBack } from "react-icons/io5";
+import { FiUpload, FiX, FiFile, FiTrash2 } from "react-icons/fi";
+import { BsCalendar3 } from "react-icons/bs";
+import toast from "react-hot-toast";
 import api from "../api/apiClient";
-import "../styles/create-quiz.css";
+import "../styles/create-assignment.css";
 
-const createEmptyQuestion = () => ({
-  question: "",
-  options: ["", "", "", ""],
-  answerIndex: null,
-  explanation: "",
-});
-
-const TIME_PRESETS = [5, 10, 15, 30];
-
-/* ── tiny inline popup ── */
-function FieldError({ msg, onDismiss }) {
-  const [visible, setVisible] = useState(true);
-  if (!msg || !visible) return null;
-  const dismiss = () => { setVisible(false); onDismiss?.(); };
-  return (
-    <div className="cq-field-error" role="alert">
-      <span className="cq-field-error-icon">!</span>
-      {msg}
-      <button className="cq-field-error-close" type="button" onClick={dismiss} aria-label="Dismiss">
-        ×
-      </button>
-    </div>
-  );
-}
-
-export default function CreateQuiz() {
+export default function CreateAssignment() {
   const navigate = useNavigate();
   const { subjectId } = useParams();
+  const { state: editData } = useLocation();
 
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState([createEmptyQuestion()]);
-  const [loading, setLoading] = useState(false);
-  const [timeLimit, setTimeLimit] = useState(10);
-  const [customTime, setCustomTime] = useState("");
-  const [useCustom, setUseCustom] = useState(false);
+  const isEditing = Boolean(editData);
 
-  /* ── validation errors ── */
-  const [titleError, setTitleError] = useState("");
-  const [qErrors, setQErrors] = useState(() => [
-    { question: "", options: ["", "", "", ""], answer: "", explanation: "" },
-  ]);
+  const [chapters, setChapters] = useState([]);
+  const [chapterId, setChapterId] = useState(
+    editData?.chapter_id || editData?.chapter?.id || ""
+  );
+  const [title, setTitle] = useState(editData?.title || "");
+  const [description, setDescription] = useState(editData?.description || "");
+  const [dueDate, setDueDate] = useState(
+    editData?.due_date?.slice(0, 10) || ""
+  );
+  const [dueTime, setDueTime] = useState("23:59");
 
-  const effectiveTimeLimit = useCustom ? parseInt(customTime) || 5 : timeLimit;
+  const [file, setFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  /* ── helpers to clear a specific error on user interaction ── */
-  const clearTitleError = () => setTitleError("");
+  const fileInputRef = useRef(null);
+  const dropZoneRef = useRef(null);
 
-  const clearQError = (qIdx, field, optIdx = null) => {
-    setQErrors((prev) => {
-      const copy = prev.map((e) => ({ ...e, options: [...e.options] }));
-      if (field === "option" && optIdx !== null) {
-        copy[qIdx].options[optIdx] = "";
-      } else {
-        copy[qIdx][field] = "";
+  useEffect(() => {
+    async function fetchChapters() {
+      try {
+        const res = await api.get(`/courses/subject/${subjectId}/`);
+        setChapters(res.data?.chapters || []);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load chapters.");
       }
-      return copy;
-    });
-  };
-
-  /* ── question state updaters ── */
-  const updateQuestion = (index, value) => {
-    const copy = [...questions];
-    copy[index].question = value;
-    setQuestions(copy);
-    clearQError(index, "question");
-  };
-
-  const updateOption = (qIndex, optIndex, value) => {
-    const copy = [...questions];
-    copy[qIndex].options[optIndex] = value;
-    setQuestions(copy);
-    clearQError(qIndex, "option", optIndex);
-  };
-
-  const updateExplanation = (index, value) => {
-    const copy = [...questions];
-    copy[index].explanation = value;
-    setQuestions(copy);
-    clearQError(index, "explanation");
-  };
-
-  const setCorrectAnswer = (qIndex, optIndex) => {
-    const copy = [...questions];
-    copy[qIndex].answerIndex = optIndex;
-    setQuestions(copy);
-    clearQError(qIndex, "answer");
-  };
-
-  const addQuestion = () => {
-    setQuestions([...questions, createEmptyQuestion()]);
-    setQErrors((prev) => [
-      ...prev,
-      { question: "", options: ["", "", "", ""], answer: "", explanation: "" },
-    ]);
-  };
-
-  /* ── validate and return true if all fields are valid ── */
-  const validate = () => {
-    let valid = true;
-
-    // title
-    let newTitleError = "";
-    if (!title.trim()) {
-      newTitleError = "Quiz title is required.";
-      valid = false;
     }
-    setTitleError(newTitleError);
 
-    // questions
-    const newQErrors = questions.map((q) => {
-      const err = { question: "", options: ["", "", "", ""], answer: "", explanation: "" };
+    if (subjectId) fetchChapters();
+  }, [subjectId]);
 
-      if (!q.question.trim()) {
-        err.question = "Question text is required.";
-        valid = false;
-      }
+  const validate = () => {
+    const newErrors = {};
 
-      q.options.forEach((opt, i) => {
-        if (!opt.trim()) {
-          err.options[i] = `Option ${String.fromCharCode(97 + i).toUpperCase()} is required.`;
-          valid = false;
-        }
-      });
+    if (!chapterId) newErrors.chapter = "Chapter required";
+    if (!title.trim()) newErrors.title = "Title required";
+    if (!description.trim()) newErrors.description = "Description required";
+    if (!dueDate) newErrors.dueDate = "Due date required";
+    if (!file && !isEditing) newErrors.file = "File required";
 
-      if (q.answerIndex === null) {
-        err.answer = "Please select the correct answer.";
-        valid = false;
-      }
-
-      if (!q.explanation.trim()) {
-        err.explanation = "Explanation is required.";
-        valid = false;
-      }
-
-      return err;
-    });
-
-    setQErrors(newQErrors);
-    return valid;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleCreate = async () => {
+  const handleFileChange = (selectedFile) => {
+    if (!selectedFile) return;
+
+    const allowedExtensions = [".pdf", ".doc", ".docx"];
+    const name = selectedFile.name.toLowerCase();
+
+    if (!allowedExtensions.some(ext => name.endsWith(ext))) {
+      toast.error("Only PDF, DOC, DOCX allowed");
+      return;
+    }
+
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (selectedFile.size > maxSize) {
+      toast.error("File must be less than 50MB");
+      return;
+    }
+
+    setFile(selectedFile);
+    setErrors(prev => ({ ...prev, file: null }));
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileChange(e.dataTransfer.files[0]);
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const handleSubmit = async () => {
     if (!validate()) return;
 
     try {
-      setLoading(true);
+      const formData = new FormData();
+      formData.append("chapter_id", chapterId);
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("due_date", `${dueDate}T${dueTime}:00`);
 
-      const quizRes = await api.post("/teacher/quizzes/", {
-        subject: subjectId,
-        title,
-        description: "",
-        due_date: new Date(Date.now() + 86400000).toISOString(),
-        time_limit_minutes: effectiveTimeLimit,
-      });
-
-      const quizId = quizRes.data.id;
-
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-        await api.post(`/teacher/quizzes/${quizId}/questions/`, {
-          text: q.question,
-          order: i + 1,
-          marks: 1,
-          explanation: q.explanation,
-          choices: q.options.map((opt, index) => ({
-            text: opt,
-            is_correct: index === q.answerIndex,
-          })),
-        });
+      if (file) {
+        formData.append("attachment", file);
       }
 
-      alert("Quiz created successfully");
-      navigate(`/teacher/classes/${subjectId}/quizzes`);
+      if (isEditing) {
+        const res = await api.patch(
+          `/assignments/teacher/${editData.id}/edit/`,
+          formData
+        );
+        toast.success(res?.data?.message || "Assignment updated successfully");
+      } else {
+        const res = await api.post("/assignments/teacher/create/", formData);
+        toast.success(res?.data?.message || "Assignment created successfully");
+      }
+
+      setTimeout(() => {
+        navigate(`/teacher/classes/${subjectId}/assignments`);
+      }, 600);
     } catch (err) {
-      alert(err.response?.data?.detail || "Quiz creation failed");
-    } finally {
-      setLoading(false);
+      console.error(err);
+      toast.error(
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Operation failed."
+      );
     }
   };
 
-  return (
-    <div className="create-quiz-page">
-      <button type="button" className="cq-back-btn" onClick={() => navigate(-1)}>
-        ← Back
-      </button>
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
-      <div className="cq-shell">
-        <div className="cq-title-container">
-          {/* Quiz title */}
-          <div className="cq-title-field">
-            <input
-              className={`cq-title-input ${titleError ? "cq-input-error" : ""}`}
-              type="text"
-              placeholder="Quiz Title"
-              value={title}
-              onChange={(e) => { setTitle(e.target.value); clearTitleError(); }}
-            />
-            <FieldError msg={titleError} />
+  return (
+    <div className="create-assignment-page">
+      {/* Header */}
+      <div className="ca-header">
+        <button className="ca-back-btn" onClick={() => navigate(-1)}>
+          <IoChevronBack /> Back
+        </button>
+      </div>
+
+      {/* Title Card */}
+      <div className="ca-title-card">
+        <h2 className="ca-page-title">
+          {isEditing ? "Edit" : "Create"} <span className="ca-highlight">Assignment</span>
+        </h2>
+      </div>
+
+      {/* Form Container */}
+      <div className="ca-form-container">
+        <div className="ca-form">
+
+          {/* Chapter */}
+          <div className="ca-field">
+            <label className="ca-label">Chapter</label>
+            <div className="ca-custom-select-wrapper">
+              <select
+                value={chapterId}
+                onChange={(e) => {
+                  setChapterId(e.target.value);
+                  setErrors(prev => ({ ...prev, chapter: null }));
+                }}
+                className={`ca-select ${errors.chapter ? "ca-input-error" : ""}`}
+              >
+                <option value="">Select Chapter</option>
+                {chapters.map((ch) => (
+                  <option key={ch.id} value={ch.id}>
+                    {ch.title}
+                  </option>
+                ))}
+              </select>
+              <button className="ca-custom-btn">Custom</button>
+            </div>
+            {errors.chapter && (
+              <span className="ca-error">{errors.chapter}</span>
+            )}
           </div>
 
-          {/* Timer picker */}
-          <div className="cq-timer-picker">
-            <span className="cq-timer-label">⏱ Time limit</span>
-            <div className="cq-timer-presets">
-              {TIME_PRESETS.map((min) => (
-                <button
-                  key={min}
-                  type="button"
-                  className={`cq-timer-btn ${!useCustom && timeLimit === min ? "active" : ""}`}
-                  onClick={() => { setTimeLimit(min); setUseCustom(false); }}
-                >
-                  {min} min
-                </button>
-              ))}
-              <button
-                type="button"
-                className={`cq-timer-btn ${useCustom ? "active" : ""}`}
-                onClick={() => setUseCustom(true)}
-              >
-                Custom
-              </button>
+          {/* Title */}
+          <div className="ca-field">
+            <label className="ca-label">Title</label>
+            <input
+              type="text"
+              placeholder="Select Topic"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setErrors(prev => ({ ...prev, title: null }));
+              }}
+              className={`ca-input ${errors.title ? "ca-input-error" : ""}`}
+            />
+            {errors.title && (
+              <span className="ca-error">{errors.title}</span>
+            )}
+          </div>
+
+          {/* Due Date & Time */}
+          <div className="ca-datetime-row">
+            <div className="ca-field ca-field-half">
+              <label className="ca-label">Due Date</label>
+              <div className="ca-date-wrapper">
+                <div className="ca-date-display">
+                  {dueDate ? formatDate(dueDate) : "26 Jan 2026"}
+                </div>
+                <label className="ca-date-icon-wrapper">
+                  <BsCalendar3 className="ca-date-icon" />
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => {
+                      setDueDate(e.target.value);
+                      setErrors(prev => ({ ...prev, dueDate: null }));
+                    }}
+                    className="ca-date-input"
+                  />
+                </label>
+              </div>
+              {errors.dueDate && (
+                <span className="ca-error">{errors.dueDate}</span>
+              )}
             </div>
 
-            {useCustom && (
+            <div className="ca-field ca-field-half">
+              <label className="ca-label">Set Time</label>
               <input
-                className="cq-timer-custom-input"
-                type="number"
-                min="1"
-                placeholder="Enter minutes"
-                value={customTime}
-                onChange={(e) => setCustomTime(e.target.value)}
-                autoFocus
+                type="time"
+                value={dueTime}
+                onChange={(e) => setDueTime(e.target.value)}
+                className="ca-input"
               />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="ca-field">
+            <label className="ca-label">Note</label>
+            <textarea
+              rows={4}
+              placeholder="Teach kids understanding fragment or identities and solving complex problems."
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setErrors(prev => ({ ...prev, description: null }));
+              }}
+              className={`ca-textarea ${errors.description ? "ca-input-error" : ""}`}
+            />
+            {errors.description && (
+              <span className="ca-error">{errors.description}</span>
+            )}
+          </div>
+
+          {/* Files Section */}
+          <div className="ca-field">
+            <div className="ca-files-header">
+              <label className="ca-label">Files</label>
+              <span className="ca-file-count">({file ? 1 : 0})</span>
+            </div>
+
+            {/* Drop Zone */}
+            <div
+              ref={dropZoneRef}
+              className={`ca-drop-zone ${dragActive ? "ca-drag-active" : ""} ${errors.file ? "ca-input-error" : ""}`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                hidden
+                onChange={(e) => handleFileChange(e.target.files?.[0])}
+                accept=".pdf,.doc,.docx"
+              />
+              
+              <FiUpload className="ca-upload-icon" />
+              <p className="ca-drop-text">Click or drag file to this area to upload</p>
+              <p className="ca-drop-subtext">Maximum 50 MB file size</p>
+            </div>
+
+            {errors.file && (
+              <span className="ca-error">{errors.file}</span>
             )}
 
-            <span className="cq-timer-display">{effectiveTimeLimit} min selected</span>
-          </div>
-        </div>
-
-        <div className="cq-form-container">
-          <div className="cq-questions-list">
-            {questions.map((q, qIndex) => {
-              const err = qErrors[qIndex] || { question: "", options: ["","","",""], answer: "", explanation: "" };
-              return (
-                <div key={qIndex} className="cq-question-block">
-                  {/* Question text */}
-                  <div className="cq-question-top">
-                    <span className="cq-qno">Q{qIndex + 1}.</span>
-                    <div style={{ flex: 1 }}>
-                      <input
-                        className={`cq-question-input ${err.question ? "cq-input-error" : ""}`}
-                        placeholder="Enter Question"
-                        value={q.question}
-                        onChange={(e) => updateQuestion(qIndex, e.target.value)}
-                      />
-                      <FieldError msg={err.question} />
+            {/* Uploaded Files List */}
+            {file && (
+              <div className="ca-uploaded-files">
+                <div className="ca-file-item">
+                  <div className="ca-file-icon">
+                    <FiFile />
+                  </div>
+                  <div className="ca-file-details">
+                    <div className="ca-file-name">{file.name}</div>
+                    <div className="ca-file-meta">
+                      <span>{formatFileSize(file.size)}</span>
+                      <span className="ca-file-status">✓ Uploaded</span>
                     </div>
                   </div>
+                  <button
+                    className="ca-file-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFile(null);
+                    }}
+                    title="Remove file"
+                  >
+                    <FiX />
+                  </button>
+                </div>
+              </div>
+            )}
 
-                  {/* Options */}
-                  <div className="cq-options-grid">
-                    {q.options.map((opt, optIndex) => (
-                      <div key={optIndex} className="cq-option-row">
-                        <span className="cq-option-letter">
-                          {String.fromCharCode(97 + optIndex)})
-                        </span>
-                        <div style={{ flex: 1 }}>
-                          <input
-                            className={`cq-option-input ${err.options[optIndex] ? "cq-input-error" : ""}`}
-                            placeholder={`Option ${optIndex + 1}`}
-                            value={opt}
-                            onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                          />
-                          <FieldError msg={err.options[optIndex]} />
-                        </div>
-                      </div>
-                    ))}
+            {/* Existing file in edit mode */}
+            {isEditing && editData?.attachment && !file && (
+              <div className="ca-uploaded-files">
+                <div className="ca-file-item ca-existing-file">
+                  <div className="ca-file-icon">
+                    <FiFile />
                   </div>
-
-                  {/* Answer picker */}
-                  <div className="cq-answer-row">
-                    <span className="cq-answer-label">Answer:</span>
-                    <div>
-                      <div className="cq-answer-choices">
-                        {q.options.map((_, optIndex) => (
-                          <label key={optIndex} className="cq-answer-choice">
-                            <input
-                              type="radio"
-                              name={`correct-answer-${qIndex}`}
-                              checked={q.answerIndex === optIndex}
-                              onChange={() => setCorrectAnswer(qIndex, optIndex)}
-                            />
-                            <span>{String.fromCharCode(97 + optIndex)}</span>
-                          </label>
-                        ))}
-                      </div>
-                      <FieldError msg={err.answer} />
-                    </div>
-                  </div>
-
-                  {/* Explanation */}
-                  <div className="cq-explanation-row">
-                    <span className="cq-answer-label">Explanation:</span>
-                    <div style={{ flex: 1 }}>
-                      <textarea
-                        className={`cq-explanation-input ${err.explanation ? "cq-input-error" : ""}`}
-                        placeholder="Explain why this is the correct answer..."
-                        value={q.explanation}
-                        onChange={(e) => updateExplanation(qIndex, e.target.value)}
-                      />
-                      <FieldError msg={err.explanation} />
-                    </div>
+                  <div className="ca-file-details">
+                    <div className="ca-file-name">Existing attachment</div>
+                    <a
+                      href={editData.attachment}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ca-file-link"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View file
+                    </a>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
 
-          <div className="cq-bottom-row">
-            <button type="button" className="cq-add-question-btn" onClick={addQuestion}>
-              Add Question
-            </button>
-            <button
-              type="button"
-              className="cq-create-btn"
-              onClick={handleCreate}
-              disabled={loading}
-            >
-              {loading ? "Creating..." : "Create"}
+          {/* Submit Button */}
+          <div className="ca-actions">
+            <button className="ca-submit-btn" onClick={handleSubmit}>
+              {isEditing ? "Update Assignment" : "Create Assignment"}
             </button>
           </div>
+
         </div>
       </div>
     </div>
