@@ -15,6 +15,7 @@ export default function ParticipantsPanel({ raisedHands = {} }) {
   ===================================== */
   const updateMuteStatus = useCallback(() => {
     const map = {};
+
     for (const p of participants) {
       let isMuted = true;
 
@@ -64,12 +65,16 @@ export default function ParticipantsPanel({ raisedHands = {} }) {
   };
 
   /* =====================================
-     🔥 SORT (PRESENTERS FIRST)
+     🔥 SORT USING METADATA ONLY (FIXED)
   ===================================== */
   const sortedParticipants = [...participants].sort((a, b) => {
-    const aCanPublish = a.permissions?.canPublish ? 1 : 0;
-    const bCanPublish = b.permissions?.canPublish ? 1 : 0;
-    return bCanPublish - aCanPublish;
+    const metaA = a.metadata ? JSON.parse(a.metadata) : null;
+    const metaB = b.metadata ? JSON.parse(b.metadata) : null;
+
+    const aPresenter = metaA?.role === "presenter" ? 1 : 0;
+    const bPresenter = metaB?.role === "presenter" ? 1 : 0;
+
+    return bPresenter - aPresenter;
   });
 
   return (
@@ -90,9 +95,9 @@ export default function ParticipantsPanel({ raisedHands = {} }) {
           {sortedParticipants.map((p) => {
             const meta = p.metadata ? JSON.parse(p.metadata) : null;
 
-            // 🔥 FIX: NEW ROLE SYSTEM
-            const isPresenter =
-              meta?.role === "presenter" || p.permissions?.canPublish;
+            // 🔥 ROLE FIX
+            const isPresenter = meta?.role === "presenter";
+            const isTeacher = meta?.user_type === "teacher";
 
             const handRaised = raisedHands[p.identity];
             const displayName = p.name || p.identity;
@@ -109,18 +114,34 @@ export default function ParticipantsPanel({ raisedHands = {} }) {
                 <div className="participant-name">
                   {displayName}
 
-                  {/* 🔥 FIX: LABEL */}
+                  {/* 🔥 LABELS */}
                   {isPresenter && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        marginLeft: 6,
-                        color: "var(--brand)",
-                        opacity: 0.8,
-                      }}
-                    >
-                      PRESENTER
+                    <span style={{
+                      fontSize: 10,
+                      marginLeft: 6,
+                      color: "var(--brand)"
+                    }}>
+                      • PRESENTER
+                    </span>
+                  )}
+
+                  {isTeacher && !isPresenter && (
+                    <span style={{
+                      fontSize: 10,
+                      marginLeft: 6,
+                      color: "#555"
+                    }}>
+                      • TEACHER
+                    </span>
+                  )}
+
+                  {!isTeacher && !isPresenter && (
+                    <span style={{
+                      fontSize: 10,
+                      marginLeft: 6,
+                      color: "#888"
+                    }}>
+                      • STUDENT
                     </span>
                   )}
 
@@ -129,16 +150,11 @@ export default function ParticipantsPanel({ raisedHands = {} }) {
                   )}
                 </div>
 
-                {/* 🔥 ONLY MUTE VIEWERS */}
+                {/* 🔥 ONLY VIEWERS CAN BE MUTED */}
                 {!isPresenter && (
                   <button
                     className="participant-mute-btn"
                     onClick={() => handleMuteStudent(p)}
-                    title={
-                      mutedMap[p.identity]
-                        ? "Student is muted"
-                        : "Mute student"
-                    }
                   >
                     {mutedMap[p.identity] ? (
                       <BsMicMuteFill size={13} color="#b91c1c" />
