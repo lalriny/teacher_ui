@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IoChevronBack } from "react-icons/io5";
-import { MdDelete } from "react-icons/md";
+import { MdDelete, MdUpload, MdInsertDriveFile, MdCheckCircle } from "react-icons/md";
 import api from "../api/apiClient";
 import "../styles/upload-material.css";
 
@@ -24,6 +24,12 @@ export default function UploadMaterial() {
 
   const fileInputRef = useRef(null);
 
+  const formatSize = (bytes) => {
+    if (!bytes || bytes <= 0) return "0 KB";
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
+    return `${Math.round(bytes / 1024)} KB`;
+  };
+
   useEffect(() => {
     if (subjectId) {
       loadChapters();
@@ -43,7 +49,6 @@ export default function UploadMaterial() {
     fileInputRef.current.click();
   };
 
-  // ✅ REAL UPLOAD
   const handleFileChange = async (e) => {
     const selected = Array.from(e.target.files || []);
 
@@ -80,7 +85,6 @@ export default function UploadMaterial() {
           }
         });
 
-        // ✅ mark complete
         setFileItems(prev =>
           prev.map(f =>
             f.name === file.name
@@ -100,7 +104,6 @@ export default function UploadMaterial() {
     }
   };
 
-  // ✅ FIXED REMOVE (NO files state anymore)
   const handleRemoveFile = (name) => {
     setFileItems(prev => prev.filter(f => f.name !== name));
   };
@@ -115,11 +118,9 @@ export default function UploadMaterial() {
     if (useCustomChapter && !customChapter.trim())
       return alert("Enter custom chapter");
 
-    // ✅ FIXED (use fileItems)
     if (fileItems.length === 0)
       return alert("Add files");
 
-    // ✅ PREVENT SAVE BEFORE UPLOAD COMPLETE
     const notUploaded = fileItems.some(item => !item.id);
     if (notUploaded) {
       alert("Wait for all files to finish uploading");
@@ -164,16 +165,10 @@ export default function UploadMaterial() {
         <IoChevronBack /> Back
       </button>
 
+      <div className="um-main-card">
+
       <div className="um-header">
         <h2 className="um-title">Mathematics</h2>
-
-        <button
-          className="um-save-btn"
-          onClick={handleUpload}
-          disabled={uploading}
-        >
-          {uploading ? "Saving..." : "Save"}
-        </button>
       </div>
 
       <div className="um-form-container">
@@ -238,10 +233,10 @@ export default function UploadMaterial() {
             </div>
 
             <div className="um-field">
-              <label className="um-label">Note</label>
+              <label className="um-label">Note:</label>
               <textarea
                 className="um-input"
-                placeholder='Optional: Add helpful context...'
+                placeholder='Optional: Add helpful context (e.g., "Focus on examples 5-8" or "Review derivatives before this")'
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
@@ -249,65 +244,81 @@ export default function UploadMaterial() {
 
           </div>
 
-          {/* RIGHT */}
-          <div className="um-upload-panel">
+          {/* RIGHT SIDE WRAPPER */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
 
-            <div className="um-upload-title">Upload File</div>
+            <div className="um-upload-panel">
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              multiple
-              accept=".pdf,.doc,.docx"
-              onChange={handleFileChange}
-            />
+              <div className="um-upload-title">
+                <span>Upload File</span>
+                <span>( {fileItems.length} )</span>
+              </div>
 
-            <button
-              className="um-add-attachment-btn"
-              onClick={handleAddAttachment}
-            >
-              Click to upload or drag & drop
-            </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                multiple
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+              />
 
-            <div className="um-upload-info">
-              Max 50MB • PDF, DOC, DOCX
+              <div className="um-dropzone" onClick={handleAddAttachment}>
+                <div className="um-dropzone-icon-btn">
+                  <MdUpload size={20} />
+                  <span>Upload</span>
+                </div>
+                <p className="um-dropzone-text">Choose a file or drag and drop it here</p>
+                <p className="um-dropzone-subtext">Maximum 50 MB/file size</p>
+              </div>
+
+              {fileItems.length > 0 && (
+                <div className="um-file-list">
+                  {fileItems.map((item, i) => (
+                    <div key={i} className={`um-file-card ${item.status === "done" ? "um-file-card--done" : ""}`}>
+                      <div className="um-file-card-inner">
+                        <MdInsertDriveFile className="um-file-doc-icon" />
+                        <div className="um-file-meta">
+                          <span className="um-file-name">{item.name}</span>
+                          <span className="um-file-size-row">
+                            <span>{formatSize(Math.round((item.progress / 100) * item.size))} / {formatSize(item.size)}</span>
+                            {item.status === "done"
+                              ? <span className="um-file-status-done"><MdCheckCircle size={12} /> Completed</span>
+                              : <span className="um-file-status-uploading">↑ Uploading...</span>
+                            }
+                          </span>
+                        </div>
+                        <span className="um-file-action-btn" onClick={() => handleRemoveFile(item.name)}>
+                          {item.status === "done" ? <MdDelete size={18} /> : "✕"}
+                        </span>
+                      </div>
+                      {item.status !== "done" && (
+                        <div className="um-progress-bar">
+                          <div className="um-progress-fill" style={{ width: `${item.progress}%` }} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
             </div>
 
-            {fileItems.length > 0 && (
-              <div className="um-file-list">
-                {fileItems.map((item, i) => (
-                  <div key={i} className="um-file-card">
-
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span>{item.name}</span>
-                      <MdDelete
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleRemoveFile(item.name)}
-                      />
-                    </div>
-
-                    <small>
-                      {(item.size / 1024).toFixed(1)} KB
-                    </small>
-
-                    <div className="um-progress-bar">
-                      <div
-                        className="um-progress-fill"
-                        style={{ width: `${item.progress}%` }}
-                      />
-                    </div>
-
-                    <span>{item.progress}%</span>
-
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* ✅ SAVE BUTTON BELOW PANEL */}
+            <button
+              className="um-save-btn"
+              style={{ marginTop: "10px", alignSelf: "flex-end" }}
+              onClick={handleUpload}
+              disabled={uploading}
+            >
+              {uploading ? "Saving..." : "Save"}
+            </button>
 
           </div>
 
         </div>
+
+      </div>
 
       </div>
 

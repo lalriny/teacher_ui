@@ -4,6 +4,28 @@
   box-sizing: border-box;
 }
 
+/* Prevent text cursor & text selection on interactive elements */
+button,
+[role="button"],
+[role="tab"],
+.tab,
+.tabs a,
+a,
+label,
+summary {
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+button:focus,
+[role="button"]:focus,
+[role="tab"]:focus {
+  outline: none;
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   -webkit-font-smoothing: antialiased;

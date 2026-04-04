@@ -48,6 +48,16 @@ export default function TeacherRoutes() {
     <Routes>
       <Route path="/" element={<RedirectToMainLogin />} />
 
+      {/* Private Session Live — fullscreen, outside TeacherLayout */}
+      <Route
+        path="/teacher/private-session/live/:id"
+        element={
+          <ProtectedTeacherRoute>
+            <PrivateSessionLive />
+          </ProtectedTeacherRoute>
+        }
+      />
+
       <Route
         path="/teacher"
         element={
@@ -92,6 +102,7 @@ export default function TeacherRoutes() {
         <Route path="classes/:subjectId/students/:studentId" element={<StudentDetail />} />
 
         {/* Live Sessions */}
+        <Route path="live-sessions" element={<LiveSessions />} />
         <Route path="classes/:subjectId/live-sessions" element={<LiveSessions />} />
         <Route path="classes/:subjectId/live-sessions/create" element={<TeacherCreateLiveSession />} />
         <Route path="live/:id" element={<TeacherLiveSession />} />

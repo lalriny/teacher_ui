@@ -132,6 +132,10 @@ const privateSessionService = {
  */
 function transformSession(s) {
   if (!s) return s;
+  // Prefer actual_duration_minutes (computed from started_at/ended_at) over scheduled duration_minutes
+  const actualDur = s.actual_duration_minutes;
+  const scheduledDur = s.duration_minutes;
+  const displayDur = actualDur || scheduledDur;
   return {
     ...s,
     _date: s.scheduled_date || s.date || "",
@@ -139,8 +143,9 @@ function transformSession(s) {
     _student: s.student_name || "",
     _teacher: s.teacher_name || "",
     _groupSize: s.group_strength || 0,
-    _duration: s.duration_minutes || s.duration || "",
-    _durationLabel: s.duration_minutes ? `${s.duration_minutes} minutes` : (s.duration || ""),
+    _duration: displayDur || "",
+    _durationLabel: actualDur ? `${actualDur} mins (actual)` : (scheduledDur ? `${scheduledDur} minutes` : ""),
+    _actualDuration: actualDur,
     _studentId: s.student_id || "",
     _participants: s.participants || [],
     teacher_name: s.teacher_name,
@@ -148,6 +153,9 @@ function transformSession(s) {
     scheduled_date: s.scheduled_date,
     scheduled_time: s.scheduled_time,
     duration_minutes: s.duration_minutes,
+    actual_duration_minutes: s.actual_duration_minutes,
+    started_at: s.started_at,
+    ended_at: s.ended_at,
     group_strength: s.group_strength,
     reschedule_reason: s.reschedule_reason,
     rescheduled_date: s.rescheduled_date,

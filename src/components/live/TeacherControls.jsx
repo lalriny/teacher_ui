@@ -1,5 +1,5 @@
 import { useLocalParticipant, useRoomContext } from "@livekit/components-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BsMicFill,
   BsMicMuteFill,
@@ -12,30 +12,58 @@ export default function TeacherControls() {
   const { localParticipant } = useLocalParticipant();
   const room = useRoomContext();
 
-  const [micOn, setMicOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(true);
+  const [micOn, setMicOn] = useState(false);
+  const [cameraOn, setCameraOn] = useState(false);
   const [sharing, setSharing] = useState(false);
 
+  /* =====================================
+     🔥 SYNC REAL STATE FROM LIVEKIT
+  ===================================== */
+  useEffect(() => {
+    if (!localParticipant) return;
+
+    setMicOn(localParticipant.isMicrophoneEnabled);
+    setCameraOn(localParticipant.isCameraEnabled);
+    setSharing(localParticipant.isScreenShareEnabled);
+  }, [localParticipant]);
+
+  /* =====================================
+     🔥 TOGGLES WITH ERROR SAFETY
+  ===================================== */
   const toggleMic = async () => {
-    const next = !micOn;
-    await localParticipant.setMicrophoneEnabled(next);
-    setMicOn(next);
+    try {
+      const next = !micOn;
+      await localParticipant.setMicrophoneEnabled(next);
+      setMicOn(next);
+    } catch (err) {
+      console.error("Mic error:", err);
+    }
   };
 
   const toggleCamera = async () => {
-    const next = !cameraOn;
-    await localParticipant.setCameraEnabled(next);
-    setCameraOn(next);
+    try {
+      const next = !cameraOn;
+      await localParticipant.setCameraEnabled(next);
+      setCameraOn(next);
+    } catch (err) {
+      console.error("Camera error:", err);
+    }
   };
 
   const toggleScreen = async () => {
-    const next = !sharing;
-    await localParticipant.setScreenShareEnabled(next);
-    setSharing(next);
+    try {
+      const next = !sharing;
+      await localParticipant.setScreenShareEnabled(next);
+      setSharing(next);
+    } catch (err) {
+      console.error("Screen share error:", err);
+    }
   };
 
   return (
     <div className="teacher-controls">
+
+      {/* MIC */}
       <button
         className={`control-btn${micOn ? "" : " off"}`}
         onClick={toggleMic}
@@ -45,6 +73,7 @@ export default function TeacherControls() {
         {micOn ? "Mute" : "Unmuted"}
       </button>
 
+      {/* CAMERA */}
       <button
         className={`control-btn${cameraOn ? "" : " off"}`}
         onClick={toggleCamera}
@@ -56,6 +85,7 @@ export default function TeacherControls() {
         {cameraOn ? "Camera" : "No Cam"}
       </button>
 
+      {/* SCREEN SHARE */}
       <button
         className={`control-btn${sharing ? " off" : ""}`}
         onClick={toggleScreen}
@@ -67,6 +97,7 @@ export default function TeacherControls() {
         {sharing ? "Stop Share" : "Share"}
       </button>
 
+      {/* END CALL */}
       <button
         className="control-btn end-call-btn"
         onClick={() => room.disconnect()}

@@ -1,42 +1,39 @@
-/* ===== DASHBOARD LAYOUT ===== */
+/* ===== DASHBOARD — single 3×3 grid ===== */
 
 .dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 2fr 3fr;
+  gap: 14px;
+  height: 100vh;
   padding: 16px;
   background: #c9d1de;
-  overflow-y: auto;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
 
-/* --- TOP ROW: Live Sessions + Calendar --- */
-
-.dash-top {
-  display: grid;
-  grid-template-columns: 2fr 0.95fr;
-  gap: 16px;
-  align-items: stretch;
-}
-
-
-/* Live Sessions section */
+/* ── UPCOMING LIVE SESSIONS  (col 1-2, row 1) ── */
 
 .dash-live-section {
+  grid-column: 1 / 3;
+  grid-row: 1;
   background: #f4f7f8;
   border-radius: 18px;
-  padding: 16px;
+  padding: 14px 16px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
-
 
 .dash-live-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .dash-section-title {
@@ -51,88 +48,114 @@
   color: #5a6a72;
 }
 
+/* 6-col grid inside, scrollable both ways */
 .dash-live-row {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, minmax(200px, 1fr));
+  grid-auto-rows: 1fr;
   gap: 12px;
+  padding-bottom: 4px;
+  padding-right: 4px;
+}
+
+.dash-live-row::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.dash-live-row::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.15);
+  border-radius: 10px;
 }
 
 
-/* Live Session Cards */
+/* ── LIVE SESSION CARDS ── */
+
 .live-card {
   background: #13899b;
   border-radius: 14px;
   overflow: hidden;
-  min-width: 0;
   color: white;
-  min-height: 200px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .live-card-body {
-  height: 100%;
-  padding: 16px 14px;
+  flex: 1;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .live-card-body h5 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  margin: 0 0 8px;
+  margin: 0 0 2px;
 }
 
 .live-card-body p {
-  font-size: 0.85rem;
-  margin: 0 0 8px;
-  opacity: 1;
+  font-size: 0.78rem;
+  margin: 0 0 2px;
+  opacity: 0.9;
 }
 
 .live-card-spacer {
-  height: 12px;
+  flex: 1;
+  min-height: 8px;
 }
 
 .live-card-body .starts-in {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  margin-top: 8px;
+  margin: 0;
 }
 
 .live-card-body .time {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 800;
+  margin: 0;
 }
 
 
-/* --- CALENDAR --- */
+/* ── CALENDAR  (col 3, row 1) ── */
 
 .calendar {
+  grid-column: 3;
+  grid-row: 1;
   background: #f4f7f8;
   border-radius: 18px;
-  padding: 16px;
+  padding: 14px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
-
 
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .cal-arrow {
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   color: #343434;
 }
 
 .cal-select {
   border: 1px solid #d6d6d6;
   border-radius: 8px;
-  padding: 5px 10px;
-  font-size: 0.85rem;
+  padding: 4px 8px;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #222;
   background: white;
@@ -143,26 +166,29 @@
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 3px;
   text-align: center;
+  flex: 1;
+  min-height: 0;
+  align-content: start;
 }
 
 .cal-day-name {
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: #3e3e3e;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 
 .cal-date {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   margin: 0 auto;
   color: #5b5b5b;
 }
@@ -187,62 +213,58 @@
   font-weight: 700;
 }
 
-
-
 /* Calendar Legend */
 .cal-legend {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 6px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .cal-legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 4px;
+  font-size: 0.72rem;
   color: #5a5a5a;
 }
 
-
 .cal-legend-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
 }
 
-/* --- BOTTOM ROW: 3 equal columns --- */
 
-.dash-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  align-items: stretch;
-  min-height: 480px;
-}
-
-
-/* --- SHARED CARD STYLES --- */
+/* ── BOTTOM 3 CARDS  (row 2, one per column) ── */
 
 .dash-card {
+  grid-row: 2;
   background: #f4f7f8;
   border-radius: 18px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  min-height: 0;
+  overflow: hidden;
 }
 
+/* Place bottom cards by order: 3rd child=Assignments, 4th=Notifications, 5th=Schedule */
+.dashboard > :nth-child(3) { grid-column: 1; grid-row: 2; }
+.dashboard > :nth-child(4) { grid-column: 2; grid-row: 2; }
+.dashboard > :nth-child(5) { grid-column: 3; grid-row: 2; }
 
 .dash-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .dash-card-header h4 {
@@ -265,7 +287,6 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
-
 /* Filter pills (Due / Over Due) */
 .dash-pills {
   display: flex;
@@ -278,30 +299,17 @@
 .dash-pill {
   border: none;
   background: transparent;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 12px;
+  padding: 8px 14px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
-.pill-due {
-  color: #4c5f86;
-}
-
-.pill-due.pill-active {
-  background: #6c88b7;
-  color: white;
-}
-
-.pill-overdue {
-  color: #8394b2;
-}
-
-.pill-overdue.pill-active {
-  background: #8ba0c4;
-  color: white;
-}
+.pill-due { color: #4c5f86; }
+.pill-due.pill-active { background: #6c88b7; color: white; }
+.pill-overdue { color: #8394b2; }
+.pill-overdue.pill-active { background: #8ba0c4; color: white; }
 
 .dash-empty {
   font-size: 11px;
@@ -316,7 +324,14 @@
   min-height: 0;
 }
 
-/* --- ACCORDION ITEMS (Assignment / Quiz) --- */
+.dash-card-body::-webkit-scrollbar { width: 4px; }
+.dash-card-body::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.12);
+  border-radius: 10px;
+}
+
+
+/* ── ACCORDION ITEMS (Assignment) ── */
 
 .acc-item {
   background: #f7f4f4;
@@ -336,9 +351,7 @@
   user-select: none;
 }
 
-.acc-header:hover {
-  background: rgba(89, 217, 127, 0.04);
-}
+.acc-header:hover { background: rgba(89, 217, 127, 0.04); }
 
 .acc-id {
   font-size: 1rem;
@@ -363,9 +376,7 @@
   margin: 6px 0;
 }
 
-.acc-line strong {
-  color: #151515;
-}
+.acc-line strong { color: #151515; }
 
 .btn-view-sub {
   margin-top: 14px;
@@ -379,21 +390,19 @@
   cursor: pointer;
 }
 
-.btn-view-sub:hover {
-  background: #3f89b4;
-}
+.btn-view-sub:hover { background: #3f89b4; }
 
 
-/* --- ACTIVITY / TIMELINE ITEMS --- */
+/* ── ACTIVITY / TIMELINE ITEMS ── */
 
 .act-item {
   position: relative;
   background: #f7f4f4;
   border-radius: 14px;
-  padding: 16px 14px;
+  padding: 14px 12px;
   display: flex;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   align-items: flex-start;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
@@ -401,12 +410,12 @@
 .act-day-badge {
   position: absolute;
   top: 12px;
-  left: 14px;
+  right: 12px;
   background: #e8ecf1;
   color: #5a6a72;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 3px 8px;
   border-radius: 8px;
 }
 
@@ -433,13 +442,14 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: #232323;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .act-label {
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
+  text-decoration: underline;
 }
 
 .act-label.green  { color: #111; }
@@ -448,42 +458,74 @@
 .act-label.red    { color: #111; }
 
 .act-line {
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   color: #333;
-  margin: 3px 0;
+  margin: 2px 0;
   line-height: 1.4;
 }
 
+
+/* ── RESPONSIVE ── */
+
 @media (max-width: 1200px) {
-  .dash-top {
-    grid-template-columns: 1fr;
-  }
-
-  .dash-bottom {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .dash-live-row {
+  .dashboard {
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    overflow-y: auto;
   }
+
+  .dash-live-section {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-height: 280px;
+  }
+
+  .calendar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .dash-card {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  .dashboard > :nth-child(3) { grid-column: 1; grid-row: auto; }
+  .dashboard > :nth-child(4) { grid-column: 2; grid-row: auto; }
+  .dashboard > :nth-child(5) { grid-column: 1 / -1; grid-row: auto; }
 }
 
 @media (max-width: 768px) {
   .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
     padding: 16px;
     gap: 16px;
+    overflow-y: auto;
   }
 
-  .dash-top,
-  .dash-bottom {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  .dash-live-section {
+    grid-column: 1;
+    max-height: 260px;
   }
 
   .dash-live-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(6, minmax(180px, 1fr));
   }
+
+  .calendar {
+    grid-column: 1;
+  }
+
+  .dash-card {
+    grid-column: 1;
+    grid-row: auto;
+    max-height: 400px;
+  }
+
+  .dashboard > :nth-child(3),
+  .dashboard > :nth-child(4),
+  .dashboard > :nth-child(5) { grid-column: 1; grid-row: auto; }
 
   .dash-live-section,
   .dash-card,
@@ -492,18 +534,12 @@
     border-radius: 18px;
   }
 
-  .live-card {
-    min-height: 220px;
-  }
-
-  .calendar-grid {
-    gap: 8px;
-  }
+  .calendar-grid { gap: 6px; }
 
   .cal-date {
-    width: 38px;
-    height: 38px;
-    font-size: 0.95rem;
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
   }
 
   .dash-card-header {

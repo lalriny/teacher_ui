@@ -86,16 +86,28 @@ export default function StudyMaterialView() {
         <div className="smv-details">
 
           <div className="smv-meta-card">
+
+            {/* ✅ NEW: CHAPTER */}
             <p className="smv-detail-line">
-              <span className="smv-label">Title: </span>
+              <span className="smv-label">Chapter: </span>
+              <span className="smv-value-bold">
+                {material.chapter_title || material.custom_chapter || "—"}
+              </span>
+            </p>
+
+            {/* ✅ CHANGED: TITLE → TOPIC */}
+            <p className="smv-detail-line">
+              <span className="smv-label">Topic: </span>
               <span className="smv-value-bold">{material.title}</span>
             </p>
+
             <p className="smv-detail-line">
               <span className="smv-label">Uploaded: </span>
               <span className="smv-value-bold">
                 {new Date(material.created_at).toLocaleDateString()}
               </span>
             </p>
+
           </div>
 
           <div className="smv-files-section">
