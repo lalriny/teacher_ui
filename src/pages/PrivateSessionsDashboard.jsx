@@ -35,9 +35,7 @@ function fmtDate(d) {
 
 function fmtTime(t) {
   if (!t) return "";
-  // If already formatted like "3:00 PM", return as-is
   if (t.includes("AM") || t.includes("PM") || t.includes("a.m") || t.includes("p.m")) return t;
-  // Convert 24h "15:00" → "3:00 p.m."
   const [h, m] = t.split(":");
   const hr = parseInt(h, 10);
   if (isNaN(hr)) return t;
@@ -46,10 +44,8 @@ function fmtTime(t) {
 
 function calcEnd(t, dur) {
   if (!t || !dur) return "";
-  // Parse duration — could be "60 min", "60 minutes", or just 60
   let mins = parseInt(dur, 10);
   if (isNaN(mins)) return "";
-  // Parse time
   if (t.includes("AM") || t.includes("PM") || t.includes("a.m") || t.includes("p.m")) return "";
   const [h, m] = t.split(":").map(Number);
   if (isNaN(h)) return "";
@@ -110,14 +106,14 @@ export default function PrivateSessionsDashboard() {
   const [reqStatusFilter, setReqStatusFilter] = useState("all");
   const [reqSubjectFilter, setReqSubjectFilter] = useState("all");
 
-  // Auto-refresh when navigated back with refresh flag (e.g. after accepting a request)
+  // ✅ FIX 2: Auto-refresh + switch tab when navigated back with refresh flag
   useEffect(() => {
     if (loc.state?.refresh) {
       setRefreshKey((k) => k + 1);
-      // Clear the refresh flag from location state so it doesn't re-trigger
-      nav(loc.pathname, { replace: true, state: { ...loc.state, refresh: false } });
+      setTab(loc.state?.tab || "scheduled");   // ✅ actually switch to correct tab
+      nav(loc.pathname, { replace: true, state: {} }); // ✅ clear state completely
     }
-  }, [loc.state, nav, loc.pathname]);
+  }, [loc.state?.refresh]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     async function load() {
@@ -125,7 +121,7 @@ export default function PrivateSessionsDashboard() {
       setError(null);
       try {
         const [s, r] = await Promise.all([
-          privateSessionService.getSessions().catch(() => []),
+          privateSessionService.getTeacherSessions().catch(() => []),  // ✅ FIX 1: was getSessions()
           privateSessionService.getRequests().catch(() => []),
         ]);
         setScheduled(s || []);
@@ -146,7 +142,11 @@ export default function PrivateSessionsDashboard() {
     load();
   }, [refreshKey]);
 
-  const pendingCount = requests.filter(r => r.status === "pending" || r.status === "proposed_changes" || r.status === "needs_reconfirmation").length;
+  const pendingCount = requests.filter(r =>
+    r.status === "pending" ||
+    r.status === "proposed_changes" ||
+    r.status === "needs_reconfirmation"
+  ).length;
 
   // Client-side search filter
   const searchFilter = (items) => {
@@ -174,7 +174,7 @@ export default function PrivateSessionsDashboard() {
     if (reqStatusFilter !== "all") f = f.filter(r => r.status === reqStatusFilter);
     if (reqSubjectFilter !== "all") f = f.filter(r => r.subject === reqSubjectFilter);
     return searchFilter(f);
-  }, [requests, reqStatusFilter, reqSubjectFilter, searchTerm]);
+  }, [requests, reqStatusFilter, reqSubjectFilter, searchTerm]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredHistory = searchFilter(
     historyFilter === "all" ? history : history.filter(h => h.status === historyFilter)
@@ -188,13 +188,22 @@ export default function PrivateSessionsDashboard() {
 
       {/* Tabs */}
       <div className="tps__tabs">
-        <button className={`tps__tab ${tab === "scheduled" ? "tps__tab--active" : ""}`} onClick={() => setTab("scheduled")}>
+        <button
+          className={`tps__tab ${tab === "scheduled" ? "tps__tab--active" : ""}`}
+          onClick={() => setTab("scheduled")}
+        >
           Scheduled
         </button>
-        <button className={`tps__tab ${tab === "requests" ? "tps__tab--active" : ""}`} onClick={() => setTab("requests")}>
+        <button
+          className={`tps__tab ${tab === "requests" ? "tps__tab--active" : ""}`}
+          onClick={() => setTab("requests")}
+        >
           Requests{pendingCount > 0 && <span className="tps__tab-badge">{pendingCount}</span>}
         </button>
-        <button className={`tps__tab ${tab === "history" ? "tps__tab--active" : ""}`} onClick={() => setTab("history")}>
+        <button
+          className={`tps__tab ${tab === "history" ? "tps__tab--active" : ""}`}
+          onClick={() => setTab("history")}
+        >
           History
         </button>
       </div>
@@ -217,11 +226,19 @@ export default function PrivateSessionsDashboard() {
       {/* ═══ SCHEDULED ═══ */}
       {!loading && tab === "scheduled" && (
         <div className="tps__grid">
-          {filteredScheduled.length === 0 && <p className="tps__empty">{searchTerm ? "No sessions match your search." : "No scheduled sessions yet."}</p>}
+          {filteredScheduled.length === 0 && (
+            <p className="tps__empty">
+              {searchTerm ? "No sessions match your search." : "No scheduled sessions yet."}
+            </p>
+          )}
           {filteredScheduled.map((raw) => {
             const s = norm(raw);
             return (
-              <div key={s.id} className="tps__scard" onClick={() => nav(`/teacher/private-sessions/scheduled/${s.id}`)}>
+              <div
+                key={s.id}
+                className="tps__scard"
+                onClick={() => nav(`/teacher/private-sessions/scheduled/${s.id}`)}
+              >
                 <div className="tps__scard-body">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <h3 className="tps__scard-subject">{s.subject}</h3>
@@ -229,11 +246,17 @@ export default function PrivateSessionsDashboard() {
                   </div>
                   <p className="tps__scard-course">{s.course}</p>
                   {s.topic && <p className="tps__scard-topic">{s.topic}</p>}
-                  {s._student && <p className="tps__scard-student">👤 {s._student}{s._groupSize > 0 ? ` · ${s._groupSize} students` : ""}</p>}
+                  {s._student && (
+                    <p className="tps__scard-student">
+                      👤 {s._student}{s._groupSize > 0 ? ` · ${s._groupSize} students` : ""}
+                    </p>
+                  )}
                 </div>
                 <div className="tps__scard-footer">
                   <span className="tps__scard-date">📅 {fmtDate(s._date)}</span>
-                  <span className="tps__scard-time">🕐 {fmtTime(s._time)}{calcEnd(s._time, s._duration) ? ` – ${calcEnd(s._time, s._duration)}` : ""}</span>
+                  <span className="tps__scard-time">
+                    🕐 {fmtTime(s._time)}{calcEnd(s._time, s._duration) ? ` – ${calcEnd(s._time, s._duration)}` : ""}
+                  </span>
                 </div>
               </div>
             );
@@ -246,7 +269,11 @@ export default function PrivateSessionsDashboard() {
         <>
           <div className="tps__filters">
             <div className="tps__select-wrap">
-              <select className="tps__select" value={reqStatusFilter} onChange={e => setReqStatusFilter(e.target.value)}>
+              <select
+                className="tps__select"
+                value={reqStatusFilter}
+                onChange={e => setReqStatusFilter(e.target.value)}
+              >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="proposed_changes">Proposed Changes</option>
@@ -255,7 +282,11 @@ export default function PrivateSessionsDashboard() {
               <span className="tps__select-arrow">▾</span>
             </div>
             <div className="tps__select-wrap">
-              <select className="tps__select" value={reqSubjectFilter} onChange={e => setReqSubjectFilter(e.target.value)}>
+              <select
+                className="tps__select"
+                value={reqSubjectFilter}
+                onChange={e => setReqSubjectFilter(e.target.value)}
+              >
                 <option value="all">All Subjects</option>
                 {reqSubjects.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -263,22 +294,36 @@ export default function PrivateSessionsDashboard() {
             </div>
           </div>
           <div className="tps__grid">
-            {filteredRequests.length === 0 && <p className="tps__empty">No requests match your filters.</p>}
+            {filteredRequests.length === 0 && (
+              <p className="tps__empty">No requests match your filters.</p>
+            )}
             {filteredRequests.map((raw) => {
               const r = norm(raw);
               return (
-                <div key={r.id} className="tps__scard" onClick={() => nav(`/teacher/private-sessions/request/${r.id}`)}>
+                <div
+                  key={r.id}
+                  className="tps__scard"
+                  onClick={() => nav(`/teacher/private-sessions/request/${r.id}`)}
+                >
                   <div className="tps__scard-body">
                     <span className={`tps__pill tps__pill--${r.status}`}>{statusLabel(r.status)}</span>
                     <h3 className="tps__scard-subject" style={{ marginTop: 6 }}>{r.subject}</h3>
                     <p className="tps__scard-course">{r.course}</p>
                     {r.topic && <p className="tps__scard-topic">{r.topic}</p>}
-                    <p className="tps__scard-student">👤 {r._student}{r._groupSize > 0 ? ` · ${r._groupSize} students` : ""}</p>
-                    {r.note && <p className="tps__scard-topic" style={{ fontStyle: "italic", marginTop: 4 }}>"{r.note}"</p>}
+                    <p className="tps__scard-student">
+                      👤 {r._student}{r._groupSize > 0 ? ` · ${r._groupSize} students` : ""}
+                    </p>
+                    {r.note && (
+                      <p className="tps__scard-topic" style={{ fontStyle: "italic", marginTop: 4 }}>
+                        "{r.note}"
+                      </p>
+                    )}
                   </div>
                   <div className="tps__scard-footer">
                     <span className="tps__scard-date">📅 {fmtDate(r._date)}</span>
-                    <span className="tps__scard-time">🕐 {fmtTime(r._time)}{calcEnd(r._time, r._duration) ? ` – ${calcEnd(r._time, r._duration)}` : ""}</span>
+                    <span className="tps__scard-time">
+                      🕐 {fmtTime(r._time)}{calcEnd(r._time, r._duration) ? ` – ${calcEnd(r._time, r._duration)}` : ""}
+                    </span>
                   </div>
                 </div>
               );
@@ -292,7 +337,11 @@ export default function PrivateSessionsDashboard() {
         <>
           <div className="tps__filters tps__filters--right">
             <div className="tps__select-wrap">
-              <select className="tps__select" value={historyFilter} onChange={e => setHistoryFilter(e.target.value)}>
+              <select
+                className="tps__select"
+                value={historyFilter}
+                onChange={e => setHistoryFilter(e.target.value)}
+              >
                 <option value="all">All History</option>
                 <option value="completed">Completed</option>
                 <option value="withdrawn">Withdrawn</option>
@@ -307,17 +356,30 @@ export default function PrivateSessionsDashboard() {
             </div>
           </div>
           <div className="tps__hlist">
-            {filteredHistory.length === 0 && <p className="tps__empty">{searchTerm ? "No history matches your search." : "No history found."}{!searchTerm && history.length === 0 ? " History endpoint may not be set up yet." : ""}</p>}
+            {filteredHistory.length === 0 && (
+              <p className="tps__empty">
+                {searchTerm ? "No history matches your search." : "No history found."}
+                {!searchTerm && history.length === 0 ? " History endpoint may not be set up yet." : ""}
+              </p>
+            )}
             {filteredHistory.map((raw) => {
               const h = norm(raw);
               return (
-                <div key={h.id} className="tps__hrow" onClick={() => nav(`/teacher/private-sessions/history/${h.id}`)}>
+                <div
+                  key={h.id}
+                  className="tps__hrow"
+                  onClick={() => nav(`/teacher/private-sessions/history/${h.id}`)}
+                >
                   <div className="tps__hrow-avatar">
                     <div className="tps__hrow-ph">{(h._student || "?")[0].toUpperCase()}</div>
                   </div>
                   <div className="tps__hrow-info">
-                    <p className="tps__hrow-name">{h._student}{h._studentId ? ` [${h._studentId}]` : ""}</p>
-                    <p className="tps__hrow-meta">{h.course}{h._courseId ? `(${h._courseId})` : ""} – {h.subject}{h._subjectCode ? `(${h._subjectCode})` : ""}</p>
+                    <p className="tps__hrow-name">
+                      {h._student}{h._studentId ? ` [${h._studentId}]` : ""}
+                    </p>
+                    <p className="tps__hrow-meta">
+                      {h.course}{h._courseId ? `(${h._courseId})` : ""} – {h.subject}{h._subjectCode ? `(${h._subjectCode})` : ""}
+                    </p>
                   </div>
                   <div className="tps__hrow-dt">
                     <p>📅 {fmtDate(h._date)}</p>
